@@ -4,6 +4,26 @@ Python Parser and Creator of CBOE PITCH Messages
 ## Based on
 https://cdn.cboe.com/resources/membership/US_EQUITIES_OPTIONS_MULTICAST_PITCH_SPECIFICATION.pdf
 
+## Create CBOE Pitch Messages
+
+Good for generating test messages for your CBOE Pitch Parser
+
+## Parse CBOE Pitch Messages
+
+Good for testing your feed parser
+
+
+## See Also
+
+I am using the code in this module to test a LabVIEW FPGA CBOE Pitch
+Feed Handler and Filter
+
+http://github.com/fpganow/cboe_pitch_lv_fpga
+
+## Usage
+
+See the tests
+
 ## Supported Message Types
 
 

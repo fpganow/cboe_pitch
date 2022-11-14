@@ -4,8 +4,6 @@ from enum import Enum
 
 import logging
 
-# from pitch.time import Time
-
 logger = logging.getLogger(__name__)
 
 
@@ -138,7 +136,6 @@ class FieldSpec:
 class MessageBase(object):
     _messageType = None
     _field_specs: OrderedDict[FieldName, FieldSpec] = None
-#    _field_specs: OrderedDict[FieldName, FieldSpec] = collections.OrderedDict()
 
     def __init__(self):
         self._field_specs: OrderedDict[FieldName, FieldSpec] = collections.OrderedDict()

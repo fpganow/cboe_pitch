@@ -9,13 +9,19 @@ from .add_order import AddOrderLong
 from .order_executed import OrderExecuted
 
 
+#
+# LabVIEW Interface
+#
+# The following functions are meant to be called from LabVIEW by
+# using the Python Connectivity Palette
+#
+
 def get_time(parameters) -> List[int]:
     seconds_since_midnight = getattr(parameters, 'Seconds Since Midnight')
     return list(Time.from_parms(time=seconds_since_midnight).get_bytes())
 
 
 def get_add_order_long(parameters) -> List[int]:
-    #    return [1, 2, 3]
     time_offset = getattr(parameters, 'Time Offset')
     order_id = getattr(parameters, 'Order Id')
     side = getattr(parameters, 'Side Indicator')
