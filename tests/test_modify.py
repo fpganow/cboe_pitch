@@ -2,18 +2,18 @@ from unittest import TestCase
 
 from hamcrest import assert_that, has_length, is_
 
-from pitch.modify import ModifyLong, ModifyShort
+from pitch.modify import ModifyOrderLong, ModifyOrderShort
 from tests.comparator import compare_bytes
 
 
 class TestModify(TestCase):
     def test_modify_long(self):
         # GIVEN
-        message = ModifyLong.from_parms(time_offset=447_000,
-                                        order_id='ORID0001',
-                                        quantity=20_000,
-                                        price=100.99,
-                                        displayed=True)
+        message = ModifyOrderLong.from_parms(time_offset=447_000,
+                                             order_id='ORID0001',
+                                             quantity=20_000,
+                                             price=100.99,
+                                             displayed=True)
 
         # WHEN
         msg_bytes = message.get_bytes()
@@ -32,11 +32,11 @@ class TestModify(TestCase):
 
     def test_modify_short(self):
         # GIVEN
-        message = ModifyShort.from_parms(time_offset=447_000,
-                                         order_id='ORID0001',
-                                         quantity=20_000,
-                                         price=100.99,
-                                         displayed=True)
+        message = ModifyOrderShort.from_parms(time_offset=447_000,
+                                              order_id='ORID0001',
+                                              quantity=20_000,
+                                              price=100.99,
+                                              displayed=True)
 
         # WHEN
         msg_bytes = message.get_bytes()

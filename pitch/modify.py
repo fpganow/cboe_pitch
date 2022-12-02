@@ -40,7 +40,7 @@ class ModifyBase(MessageBase):
         self._field_specs[FieldName.ModifyFlags].value(1 if displayed is True else 0)
 
 
-class ModifyLong(ModifyBase):
+class ModifyOrderLong(ModifyBase):
     _messageType = 0x27
 
     def __init__(self):
@@ -53,8 +53,8 @@ class ModifyLong(ModifyBase):
                    order_id: str,
                    quantity: int,
                    price: float,
-                   displayed: bool = True) -> 'ModifyLong':
-        modify_long = ModifyLong()
+                   displayed: bool = True) -> 'ModifyOrderLong':
+        modify_long = ModifyOrderLong()
         modify_long.set_fields(time_offset=time_offset,
                                order_id=order_id,
                                quantity=quantity,
@@ -63,7 +63,7 @@ class ModifyLong(ModifyBase):
         return modify_long
 
 
-class ModifyShort(ModifyBase):
+class ModifyOrderShort(ModifyBase):
     _messageType = 0x28
 
     def __init__(self):
@@ -81,8 +81,8 @@ class ModifyShort(ModifyBase):
                    order_id: str,
                    quantity: int,
                    price: float,
-                   displayed: bool = True) -> 'ModifyShort':
-        modify_short = ModifyShort()
+                   displayed: bool = True) -> 'ModifyOrderShort':
+        modify_short = ModifyOrderShort()
         modify_short.set_fields(time_offset=time_offset,
                                 order_id=order_id,
                                 quantity=quantity,

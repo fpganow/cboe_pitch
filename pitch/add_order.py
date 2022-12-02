@@ -1,7 +1,7 @@
 from pitch.pitch24 import MessageBase, FieldName, FieldSpec, FieldType
 
 
-class AddOrder(MessageBase):
+class AddOrderBase(MessageBase):
     """
         Represents a newly accepted visible order on the Cboe book.
     """
@@ -53,7 +53,7 @@ class AddOrder(MessageBase):
         self._field_specs[FieldName.AddFlags].value(1 if displayed is True else 0)
 
 
-class AddOrderLong(AddOrder):
+class AddOrderLong(AddOrderBase):
     _messageType = 0x21
 
     def __init__(self):
@@ -82,7 +82,7 @@ class AddOrderLong(AddOrder):
         return add_order_long
 
 
-class AddOrderShort(AddOrder):
+class AddOrderShort(AddOrderBase):
     _messageType = 0x22
 
     def __init__(self):
@@ -96,6 +96,7 @@ class AddOrderShort(AddOrder):
         self._field_specs[FieldName.Symbol].length(6)
         self._field_specs[FieldName.Price].offset(23)
         self._field_specs[FieldName.Price].length(2)
+        self._field_specs[FieldName.Price].field_type(FieldType.BinaryShortPrice)
         self._field_specs[FieldName.AddFlags].offset(25)
         self._field_specs[FieldName.AddFlags].length(1)
 
@@ -119,7 +120,7 @@ class AddOrderShort(AddOrder):
         return add_order_short
 
 
-class AddOrderExpanded(AddOrder):
+class AddOrderExpanded(AddOrderBase):
     _messageType = 0x2f
 
     def __init__(self):
