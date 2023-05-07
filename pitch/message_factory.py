@@ -8,8 +8,9 @@ from pitch.reduce_size import ReduceSizeLong, ReduceSizeShort
 
 class MessageFactory:
     @staticmethod
-    def from_bytes(msg_bytes: ByteString) -> Union[Time,
-                                                   AddOrderLong, AddOrderShort, AddOrderExpanded]:
+    def from_bytes(
+        msg_bytes: ByteString,
+    ) -> Union[Time, AddOrderLong, AddOrderShort, AddOrderExpanded]:
         message = None
         if msg_bytes[1] == Time._messageType:
             message = Time()
@@ -28,6 +29,6 @@ class MessageFactory:
         elif msg_bytes[1] == ReduceSizeShort._messageType:
             message = ReduceSizeShort()
         if message is None:
-            raise Exception('Unknown type')
+            raise Exception("Unknown type")
         message.from_bytes(msg_bytes)
         return message

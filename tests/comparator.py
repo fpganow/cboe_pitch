@@ -22,14 +22,16 @@ class CompareBytes(BaseMatcher):
             return False
         for idx, good_item in enumerate(self._good_msg):
             if good_item != item[idx]:
-                self._reason += f'Values at index {idx} do not match\n'
-                self._reason += f'\t\t    {good_item}  !=   {item[idx]}\n'
-                self._reason += f'\t\t  {hex(good_item)}  !=  {hex(item[idx])}'
+                self._reason += f"Values at index {idx} do not match\n"
+                self._reason += f"\t\t    {good_item}  !=   {item[idx]}\n"
+                self._reason += f"\t\t  {hex(good_item)}  !=  {hex(item[idx])}"
                 return False
         return True
 
-    def describe_mismatch(self, item: bytearray, mismatch_description: Description) -> None:
+    def describe_mismatch(
+        self, item: bytearray, mismatch_description: Description
+    ) -> None:
         mismatch_description.append_text(self._reason)
 
     def describe_to(self, description):
-        description.append_text('Compare bytearray')
+        description.append_text("Compare bytearray")

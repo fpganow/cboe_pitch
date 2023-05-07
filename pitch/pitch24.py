@@ -8,29 +8,29 @@ logger = logging.getLogger(__name__)
 
 
 class FieldName(Enum):
-    HdrLength = 'Hdr Length'
-    HdrCount = 'Hdr Count'
-    HdrUnit = 'Hdr Unit'
-    HdrSequence = 'Hdr Sequence'
+    HdrLength = "Hdr Length"
+    HdrCount = "Hdr Count"
+    HdrUnit = "Hdr Unit"
+    HdrSequence = "Hdr Sequence"
 
-    ModifyFlags = 'Modify Flags'
-    AddFlags = 'Flags'
-    Length = 'Length'
-    CanceledQuantity = 'Canceled Quantity'
-    ExecutedQuantity = 'Executed Quantity'
-    ExecutionId = 'Execution Id'
-    MessageType = 'Message Type'
-    OrderId = 'Order Id'
-    Price = 'Price'
-    Quantity = 'Quantity'
-    RemainingQuantity = 'Remaining Quantity'
-    SideIndicator = 'Side Indicator'
-    Symbol = 'Symbol'
-    Time = 'Time'
-    TimeOffset = 'Time Offset'
+    ModifyFlags = "Modify Flags"
+    AddFlags = "Flags"
+    Length = "Length"
+    CanceledQuantity = "Canceled Quantity"
+    ExecutedQuantity = "Executed Quantity"
+    ExecutionId = "Execution Id"
+    MessageType = "Message Type"
+    OrderId = "Order Id"
+    Price = "Price"
+    Quantity = "Quantity"
+    RemainingQuantity = "Remaining Quantity"
+    SideIndicator = "Side Indicator"
+    Symbol = "Symbol"
+    Time = "Time"
+    TimeOffset = "Time Offset"
 
-    ParticipantId = 'Participant Id'
-    CustomerIndicator = 'Customer Indicator'
+    ParticipantId = "Participant Id"
+    CustomerIndicator = "Customer Indicator"
 
 
 class FieldType(Enum):
@@ -44,12 +44,14 @@ class FieldType(Enum):
 
 
 class FieldSpec:
-    def __init__(self,
-                 field_name: FieldName,
-                 offset: int,
-                 length: int,
-                 field_type: FieldType,
-                 value: Any = None):
+    def __init__(
+        self,
+        field_name: FieldName,
+        offset: int,
+        length: int,
+        field_type: FieldType,
+        value: Any = None,
+    ):
         self._name = field_name
         self._offset = offset
         self._length = length
@@ -82,52 +84,49 @@ class FieldSpec:
         elif self._field_type == FieldType.Binary:
             if type(self._value) is str:
                 return self._value.encode()
-            return self._value.to_bytes(self._length, byteorder='little')
+            return self._value.to_bytes(self._length, byteorder="little")
         elif self._field_type == FieldType.BinaryLongPrice:
             tmp_val = int(self._value * 10_000)
-            return tmp_val.to_bytes(self._length, byteorder='little')
+            return tmp_val.to_bytes(self._length, byteorder="little")
         elif self._field_type == FieldType.BinaryShortPrice:
             tmp_val = int(self._value * 100)
-            return tmp_val.to_bytes(self._length, byteorder='little')
+            return tmp_val.to_bytes(self._length, byteorder="little")
         elif self._field_type == FieldType.BitField:
-            return self._value.to_bytes(self._length, byteorder='little')
+            return self._value.to_bytes(self._length, byteorder="little")
         elif self._field_type == FieldType.PrintableAscii:
-            tmp_val = self._value + (self.length() - len(self._value)) * ' '
+            tmp_val = self._value + (self.length() - len(self._value)) * " "
             return tmp_val.encode()
         elif self._field_type == FieldType.Value:
-            return self._value.to_bytes(self._length, byteorder='little')
+            return self._value.to_bytes(self._length, byteorder="little")
         return bytearray([])
 
     def fill_value(self, msg_bytes: ByteString) -> None:
         start_idx = self.offset()
         length = self.length()
         if self._field_type == FieldType.Alphanumeric:
-            value = msg_bytes[start_idx:start_idx + length].decode()
+            value = msg_bytes[start_idx : start_idx + length].decode()
             # print(f'Alphanumeric - value: {value}')
             self.value(value)
         elif self._field_type == FieldType.Binary:
-            subset = msg_bytes[self.offset():
-                               self.offset() + self.length()]
-            value = int.from_bytes(subset, 'little')
+            subset = msg_bytes[self.offset() : self.offset() + self.length()]
+            value = int.from_bytes(subset, "little")
             self.value(value)
-            print(f'value: {value} ({hex(value)})')
+            print(f"value: {value} ({hex(value)})")
         elif self._field_type == FieldType.BinaryLongPrice:
-            subset = msg_bytes[self.offset():
-                               self.offset() + self.length()]
-            value = int.from_bytes(subset, 'little')
+            subset = msg_bytes[self.offset() : self.offset() + self.length()]
+            value = int.from_bytes(subset, "little")
             value = value / 10_000
             self.value(value)
         elif self._field_type == FieldType.BinaryShortPrice:
-            subset = msg_bytes[self.offset():
-                               self.offset() + self.length()]
-            value = int.from_bytes(subset, 'little')
+            subset = msg_bytes[self.offset() : self.offset() + self.length()]
+            value = int.from_bytes(subset, "little")
             value = value / 100
             self.value(value)
         elif self._field_type == FieldType.BitField:
-            subset = msg_bytes[self.offset(): self.offset() + 1]
+            subset = msg_bytes[self.offset() : self.offset() + 1]
             self.value(subset[0])
         elif self._field_type == FieldType.PrintableAscii:
-            value = msg_bytes[start_idx:start_idx + length].decode()
+            value = msg_bytes[start_idx : start_idx + length].decode()
             self.value(value)
         elif self._field_type == FieldType.Value:
             pass
@@ -144,31 +143,32 @@ class MessageBase(object):
         final_msg = bytearray()
 
         ordered_field_specs: OrderedDict[FieldName, FieldSpec] = OrderedDict(
-            sorted(self._field_specs.items(), key=lambda x: x[1].offset()))
+            sorted(self._field_specs.items(), key=lambda x: x[1].offset())
+        )
         for field_name, field_spec in ordered_field_specs.items():
-            logger.debug(f'{field_name}')
+            logger.debug(f"{field_name}")
 
             if field_spec.value() is not None:
                 tmp_val = field_spec.get_bytes()
                 tmp_val_str = [f'0x{format(x, "02x")}' for x in tmp_val]
-                logger.debug(f'\tAppending: {list(tmp_val_str)}')
+                logger.debug(f"\tAppending: {list(tmp_val_str)}")
 
                 final_msg.extend(tmp_val)
         return final_msg
 
     def from_bytes(self, msg_bytes: ByteString):
         if msg_bytes[0] != len(msg_bytes):
-            raise Exception('Invalid message length in ByteString')
+            raise Exception("Invalid message length in ByteString")
         if msg_bytes[1] != self._messageType:
-            raise Exception('Invalid message type in ByteString')
+            raise Exception("Invalid message type in ByteString")
 
         for idx, field_spec in enumerate(self._field_specs.values()):
             if idx == 0:
                 if field_spec.value() != len(msg_bytes):
-                    raise Exception('Invalid message length')
+                    raise Exception("Invalid message length")
             elif idx == 1:
                 if field_spec.value() != self._messageType:
-                    raise Exception('Invalid message type')
+                    raise Exception("Invalid message type")
             else:
                 field_spec.fill_value(msg_bytes)
 
@@ -188,9 +188,11 @@ class MessageBase(object):
 
     def order_id(self, order_id: str = None) -> str:
         if order_id is not None:
-            self._field_specs[FieldName.OrderId].value(int.from_bytes(order_id.encode(), 'little'))
-        order_id_ba = self._field_specs[FieldName.OrderId].value().to_bytes(8, 'little')
-        return order_id_ba.decode('utf-8')
+            self._field_specs[FieldName.OrderId].value(
+                int.from_bytes(order_id.encode(), "little")
+            )
+        order_id_ba = self._field_specs[FieldName.OrderId].value().to_bytes(8, "little")
+        return order_id_ba.decode("utf-8")
 
     def side(self, side: str = None) -> str:
         if side is not None:
@@ -229,20 +231,24 @@ class MessageBase(object):
 
     def execution_id(self, execution_id: str = None) -> str:
         if execution_id is not None:
-            self._field_specs[FieldName.ExecutionId].value(int.from_bytes(execution_id.encode(), 'little'))
-        execution_id_ba = self._field_specs[FieldName.ExecutionId].value().to_bytes(8, 'little')
-        return execution_id_ba.decode('utf-8')
+            self._field_specs[FieldName.ExecutionId].value(
+                int.from_bytes(execution_id.encode(), "little")
+            )
+        execution_id_ba = (
+            self._field_specs[FieldName.ExecutionId].value().to_bytes(8, "little")
+        )
+        return execution_id_ba.decode("utf-8")
 
 
 class Heartbeat:
     """
-       A Sequenced Unit Header with a count field set to '0' will be used for
-       heartbeat messages.
-       During trading hours, heartbeat messages will be sent from the GRP and
-       all multicast addresses if no data has been delivered within 1 second.
-       Heartbeat messages never increments the sequence number.
-       Heartbeats have a Hdr Sequence Value equal to the sequence of
-       the next sequenced message.
+    A Sequenced Unit Header with a count field set to '0' will be used for
+    heartbeat messages.
+    During trading hours, heartbeat messages will be sent from the GRP and
+    all multicast addresses if no data has been delivered within 1 second.
+    Heartbeat messages never increments the sequence number.
+    Heartbeats have a Hdr Sequence Value equal to the sequence of
+    the next sequenced message.
     """
 
     def __init__(self):

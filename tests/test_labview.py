@@ -7,9 +7,8 @@ from pitch import get_time, get_add_order_long, get_order_executed
 
 
 class Parameters:
-
     @staticmethod
-    def from_dictionary(args: Dict[str, Any]) -> 'Parameters':
+    def from_dictionary(args: Dict[str, Any]) -> "Parameters":
         parameters = Parameters()
         for key, val in args.items():
             setattr(parameters, key, val)
@@ -21,7 +20,7 @@ class TestTime(TestCase):
         # GIVEN
         args = {
             # 34_200 seconds = 9:30 AM
-            'Seconds Since Midnight': 34_200
+            "Seconds Since Midnight": 34_200
         }
         parameters = Parameters.from_dictionary(args)
         msg_bytes = get_time(parameters)
@@ -31,12 +30,12 @@ class TestTime(TestCase):
     def test_add_order_long_create(self):
         # GIVEN
         args = {
-            'Time Offset': 44_000,
-            'Order Id': 'ORID001',
-            'Side Indicator': 'B',
-            'Quantity': 95_000,
-            'Symbol': 'AAPL',
-            'Price': 0.905
+            "Time Offset": 44_000,
+            "Order Id": "ORID001",
+            "Side Indicator": "B",
+            "Quantity": 95_000,
+            "Symbol": "AAPL",
+            "Price": 0.905,
         }
 
         # WHEN
@@ -49,10 +48,10 @@ class TestTime(TestCase):
     def test_order_executed_create(self):
         # GIVEN
         args = {
-            'Time Offset': 34_000,
-            'Order Id': 'ORID002',
-            'Executed Quantity': 25_000,
-            'Execution Id': 'TSLA',
+            "Time Offset": 34_000,
+            "Order Id": "ORID002",
+            "Executed Quantity": 25_000,
+            "Execution Id": "TSLA",
         }
 
         # WHEN

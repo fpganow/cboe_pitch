@@ -3,47 +3,73 @@ from pitch.pitch24 import MessageBase, FieldName, FieldSpec, FieldType
 
 class AddOrderBase(MessageBase):
     """
-        Represents a newly accepted visible order on the Cboe book.
+    Represents a newly accepted visible order on the Cboe book.
     """
 
     def __init__(self):
         super().__init__()
-        self._field_specs[FieldName.Length] = FieldSpec(field_name=FieldName.Length,
-                                                        offset=0, length=1,
-                                                        field_type=FieldType.Binary)
-        self._field_specs[FieldName.MessageType] = FieldSpec(field_name=FieldName.MessageType,
-                                                             offset=1, length=1,
-                                                             field_type=FieldType.Value)
-        self._field_specs[FieldName.TimeOffset] = FieldSpec(field_name=FieldName.TimeOffset,
-                                                            offset=2, length=4,
-                                                            field_type=FieldType.Binary)
-        self._field_specs[FieldName.OrderId] = FieldSpec(field_name=FieldName.OrderId,
-                                                         offset=6, length=8,
-                                                         field_type=FieldType.Binary)
-        self._field_specs[FieldName.SideIndicator] = FieldSpec(field_name=FieldName.SideIndicator,
-                                                               offset=14, length=1,
-                                                               field_type=FieldType.Alphanumeric)
-        self._field_specs[FieldName.Quantity] = FieldSpec(field_name=FieldName.Quantity,
-                                                          offset=15, length=4,
-                                                          field_type=FieldType.Binary)
-        self._field_specs[FieldName.Symbol] = FieldSpec(field_name=FieldName.Symbol,
-                                                        offset=19, length=6,
-                                                        field_type=FieldType.PrintableAscii)
-        self._field_specs[FieldName.Price] = FieldSpec(field_name=FieldName.Price,
-                                                       offset=25, length=8,
-                                                       field_type=FieldType.BinaryLongPrice)
-        self._field_specs[FieldName.AddFlags] = FieldSpec(field_name=FieldName.AddFlags,
-                                                          offset=33, length=1,
-                                                          field_type=FieldType.BitField)
+        self._field_specs[FieldName.Length] = FieldSpec(
+            field_name=FieldName.Length, offset=0, length=1, field_type=FieldType.Binary
+        )
+        self._field_specs[FieldName.MessageType] = FieldSpec(
+            field_name=FieldName.MessageType,
+            offset=1,
+            length=1,
+            field_type=FieldType.Value,
+        )
+        self._field_specs[FieldName.TimeOffset] = FieldSpec(
+            field_name=FieldName.TimeOffset,
+            offset=2,
+            length=4,
+            field_type=FieldType.Binary,
+        )
+        self._field_specs[FieldName.OrderId] = FieldSpec(
+            field_name=FieldName.OrderId,
+            offset=6,
+            length=8,
+            field_type=FieldType.Binary,
+        )
+        self._field_specs[FieldName.SideIndicator] = FieldSpec(
+            field_name=FieldName.SideIndicator,
+            offset=14,
+            length=1,
+            field_type=FieldType.Alphanumeric,
+        )
+        self._field_specs[FieldName.Quantity] = FieldSpec(
+            field_name=FieldName.Quantity,
+            offset=15,
+            length=4,
+            field_type=FieldType.Binary,
+        )
+        self._field_specs[FieldName.Symbol] = FieldSpec(
+            field_name=FieldName.Symbol,
+            offset=19,
+            length=6,
+            field_type=FieldType.PrintableAscii,
+        )
+        self._field_specs[FieldName.Price] = FieldSpec(
+            field_name=FieldName.Price,
+            offset=25,
+            length=8,
+            field_type=FieldType.BinaryLongPrice,
+        )
+        self._field_specs[FieldName.AddFlags] = FieldSpec(
+            field_name=FieldName.AddFlags,
+            offset=33,
+            length=1,
+            field_type=FieldType.BitField,
+        )
 
-    def set_fields(self,
-                   time_offset: int,
-                   order_id: str,
-                   side: str,
-                   quantity: int,
-                   symbol: str,
-                   price: float,
-                   displayed: bool = True):
+    def set_fields(
+        self,
+        time_offset: int,
+        order_id: str,
+        side: str,
+        quantity: int,
+        symbol: str,
+        price: float,
+        displayed: bool = True,
+    ):
         self._field_specs[FieldName.TimeOffset].value(time_offset)
         self.order_id(order_id)
         self._field_specs[FieldName.SideIndicator].value(side)
@@ -63,21 +89,24 @@ class AddOrderLong(AddOrderBase):
 
     @staticmethod
     def from_parms(
-            time_offset: int,
-            order_id: str,
-            side: str,
-            quantity: int,
-            symbol: str,
-            price: float,
-            displayed: bool = True) -> 'AddOrderLong':
+        time_offset: int,
+        order_id: str,
+        side: str,
+        quantity: int,
+        symbol: str,
+        price: float,
+        displayed: bool = True,
+    ) -> "AddOrderLong":
         add_order_long = AddOrderLong()
-        add_order_long.set_fields(time_offset=time_offset,
-                                  order_id=order_id,
-                                  side=side,
-                                  quantity=quantity,
-                                  symbol=symbol,
-                                  price=price,
-                                  displayed=displayed)
+        add_order_long.set_fields(
+            time_offset=time_offset,
+            order_id=order_id,
+            side=side,
+            quantity=quantity,
+            symbol=symbol,
+            price=price,
+            displayed=displayed,
+        )
 
         return add_order_long
 
@@ -102,26 +131,29 @@ class AddOrderShort(AddOrderBase):
 
     @staticmethod
     def from_parms(
-            time_offset: int,
-            order_id: str,
-            side: str,
-            quantity: int,
-            symbol: str,
-            price: float,
-            displayed: bool = True) -> 'AddOrderShort':
+        time_offset: int,
+        order_id: str,
+        side: str,
+        quantity: int,
+        symbol: str,
+        price: float,
+        displayed: bool = True,
+    ) -> "AddOrderShort":
         add_order_short = AddOrderShort()
-        add_order_short.set_fields(time_offset=time_offset,
-                                   order_id=order_id,
-                                   side=side,
-                                   quantity=quantity,
-                                   symbol=symbol,
-                                   price=price,
-                                   displayed=displayed)
+        add_order_short.set_fields(
+            time_offset=time_offset,
+            order_id=order_id,
+            side=side,
+            quantity=quantity,
+            symbol=symbol,
+            price=price,
+            displayed=displayed,
+        )
         return add_order_short
 
 
 class AddOrderExpanded(AddOrderBase):
-    _messageType = 0x2f
+    _messageType = 0x2F
 
     def __init__(self):
         super().__init__()
@@ -135,24 +167,31 @@ class AddOrderExpanded(AddOrderBase):
         self._field_specs[FieldName.AddFlags].offset(35)
         self._field_specs[FieldName.AddFlags].length(1)
 
-        self._field_specs[FieldName.ParticipantId] = FieldSpec(field_name=FieldName.ParticipantId,
-                                                               offset=36, length=4,
-                                                               field_type=FieldType.Alphanumeric)
-        self._field_specs[FieldName.CustomerIndicator] = FieldSpec(field_name=FieldName.CustomerIndicator,
-                                                                   offset=40, length=1,
-                                                                   field_type=FieldType.Alphanumeric)
+        self._field_specs[FieldName.ParticipantId] = FieldSpec(
+            field_name=FieldName.ParticipantId,
+            offset=36,
+            length=4,
+            field_type=FieldType.Alphanumeric,
+        )
+        self._field_specs[FieldName.CustomerIndicator] = FieldSpec(
+            field_name=FieldName.CustomerIndicator,
+            offset=40,
+            length=1,
+            field_type=FieldType.Alphanumeric,
+        )
 
     @staticmethod
     def from_parms(
-            time_offset: int,
-            order_id: str,
-            side: str,
-            quantity: int,
-            symbol: str,
-            price: float,
-            displayed: bool = True,
-            participant_id: str = '0001',
-            customer_indicator: str = "C") -> 'AddOrderExpanded':
+        time_offset: int,
+        order_id: str,
+        side: str,
+        quantity: int,
+        symbol: str,
+        price: float,
+        displayed: bool = True,
+        participant_id: str = "0001",
+        customer_indicator: str = "C",
+    ) -> "AddOrderExpanded":
         add_order_expanded = AddOrderExpanded()
         add_order_expanded.set_fields(
             time_offset=time_offset,
@@ -161,15 +200,22 @@ class AddOrderExpanded(AddOrderBase):
             quantity=quantity,
             symbol=symbol,
             price=price,
-            displayed=displayed)
-        add_order_expanded._field_specs[FieldName.ParticipantId] = FieldSpec(field_name=FieldName.ParticipantId,
-                                                                             offset=36, length=4,
-                                                                             field_type=FieldType.Alphanumeric,
-                                                                             value=participant_id)
-        add_order_expanded._field_specs[FieldName.CustomerIndicator] = FieldSpec(field_name=FieldName.CustomerIndicator,
-                                                                                 offset=40, length=1,
-                                                                                 field_type=FieldType.Alphanumeric,
-                                                                                 value=customer_indicator)
+            displayed=displayed,
+        )
+        add_order_expanded._field_specs[FieldName.ParticipantId] = FieldSpec(
+            field_name=FieldName.ParticipantId,
+            offset=36,
+            length=4,
+            field_type=FieldType.Alphanumeric,
+            value=participant_id,
+        )
+        add_order_expanded._field_specs[FieldName.CustomerIndicator] = FieldSpec(
+            field_name=FieldName.CustomerIndicator,
+            offset=40,
+            length=1,
+            field_type=FieldType.Alphanumeric,
+            value=customer_indicator,
+        )
 
         return add_order_expanded
 

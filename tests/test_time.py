@@ -18,11 +18,14 @@ class TestTime(TestCase):
 
         # THEN
         assert_that(msg_bytes, has_length(6))
-        assert_that(msg_bytes, is_(compare_bytes(bytearray([
-            6,  # Length
-            0x20,  # Type
-            0x98, 0x85, 0, 0  # Time
-        ]))))
+        assert_that(
+            msg_bytes,
+            is_(
+                compare_bytes(
+                    bytearray([6, 0x20, 0x98, 0x85, 0, 0])  # Length  # Type  # Time
+                )
+            ),
+        )
         assert_that(message.length(), equal_to(6))
         assert_that(message.messageType(), equal_to(0x20))
         assert_that(message.time(), equal_to(34_200))
@@ -37,18 +40,21 @@ class TestTime(TestCase):
 
         # THEN
         assert_that(msg_bytes, has_length(6))
-        assert_that(msg_bytes, is_(compare_bytes(bytearray([
-            6,  # Length
-            0x20,  # Type
-            0xc8, 0, 0, 0  # Time
-        ]))))
+        assert_that(
+            msg_bytes,
+            is_(
+                compare_bytes(
+                    bytearray([6, 0x20, 0xC8, 0, 0, 0])  # Length  # Type  # Time
+                )
+            ),
+        )
         assert_that(message.length(), equal_to(6))
         assert_that(message.messageType(), equal_to(0x20))
         assert_that(message.time(), equal_to(200))
 
     def test_timestamp_parse_1_byte(self):
         # GIVEN
-        msg_bytes = bytearray([0x06, 0x20, 0xc8, 0x00, 0x00, 0x00])
+        msg_bytes = bytearray([0x06, 0x20, 0xC8, 0x00, 0x00, 0x00])
 
         # WHEN
         message = MessageFactory.from_bytes(msg_bytes)
@@ -61,7 +67,7 @@ class TestTime(TestCase):
 
     def test_timestamp_parse_4_bytes(self):
         # GIVEN
-        msg_bytes = bytearray([0x06, 0x20, 0xfe, 0xdc, 0xba, 0x11])
+        msg_bytes = bytearray([0x06, 0x20, 0xFE, 0xDC, 0xBA, 0x11])
 
         # WHEN
         message = MessageFactory.from_bytes(msg_bytes)
@@ -71,4 +77,4 @@ class TestTime(TestCase):
         assert_that(message.length(), equal_to(6))
         assert_that(message.messageType(), equal_to(0x20))
         assert_that(message.time(), equal_to(297_458_942))
-        assert_that(message.time(), equal_to(0x11_ba_dc_fe))
+        assert_that(message.time(), equal_to(0x11_BA_DC_FE))
