@@ -17,6 +17,8 @@ class Generator(object):
         rate: int = 10_000,
         start_time: datetime=None,
         total_time: int = 60,
+        book_size_range: Tuple[int, int] = None,
+        price_range: Tuple[float, float] =  None,
         seed=None,
     ):
         """
@@ -43,34 +45,63 @@ class Generator(object):
 
                 to generate messages over the span of 5 minutes:
                     300
-        """
-        self._watchList = [x for x, _ in watch_list]
-        self._weights = [y for _, y in watch_list]
 
+            book_size_range: Tuple[int, int]
+                Size or number of orders that should exist in the orderbook
+                at any given time.  If the orderbook goes outside of this
+                range, a Delete or Order Execution will be sent to decrease
+                the size to be within this range.
+
+                Defaults to [10, 20]
+                That is, an order book where each side has between 10 and 20 orders.
+
+            price_range: Tuple[float, float]
+                Price, one standard deviation
+                Target price, and the size of one standard deviation
+        """
+        # Watch List [ (<ticker>, <weight>), ... ]
+        self._watchList = watch_list
+
+        # Rate 50_000
         self._rate = 1 / (rate / 3_600)
+
+        # Start Time - Time of first message
         if start_time is None:
             start_time = datetime.now()
         self._start_time = start_time
+        # Current Time - Keep track of time for next message
         self._current_time = start_time
 
+        # Optimal Book Size
+        if book_size_range is None:
+            book_size_range = (10, 20)
+        self._book_size_range = book_size_range
+
+        if price_range is None:
+            price_range = (55.00, 2.00)
+        self._price_range = price_range
         # Message Types
         self._msgTypes = []
 
+        # Total time to generate messages for
         self._totalTime = total_time
+
+        # Seed the random number generator to facilitate easier testing
         np.random.seed(seed)
 
-        # print(f'self._watchList: {self._watchList}')
-        # print(f'self._weights: {self._weights}')
+        # Internal variable for tracking Order message creation (an orderbook)
+        self._orderBook = {}
 
-    #TODO: Accept one bigger parameter
-    #  unpack into list1, weights
-    def rchoose(self, list1, weights):
+    def rchoose(self, in_list):
         """
         list1   :    list of elements you're picking from.
         weights :    list of weights. Has to be in the same order as the
                      elements of list1. It can be given as the number of counts
                      or as a probability.
         """
+
+        list1 = [x for x, _ in in_list]
+        weights = [y for _, y in in_list]
 
         # normalizing the weights list
         w_sum = sum(weights)
@@ -105,10 +136,10 @@ class Generator(object):
         # Get a random number
         # Number of tickers
         if len(self._watchList) == 1:
-            return self._watchList[0]
+            return self._watchList[0][0]
         elif len(self._watchList) == 0:
             return None
-        return self.rchoose(self._watchList, self._weights)
+        return self.rchoose(self._watchList)
 
     def _pickTime(self):
         next_time = self._current_time

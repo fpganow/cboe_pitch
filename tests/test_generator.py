@@ -118,10 +118,11 @@ class TestGenerator(TestCase):
         )
 
         # WHEN
-        new_msg_type = gen._pickMsgType()
+        new_messages = []
+        new_messages.append(gen._pickMsgType())
 
         # THEN
-        assert_that(new_msg_type, equal_to(type(AddOrderLong)))
+        assert_that(new_messages[0], equal_to(type(AddOrderLong)))
 
 #    def test_smoke(self):
 #        # GIVEN
