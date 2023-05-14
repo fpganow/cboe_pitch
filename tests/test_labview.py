@@ -20,7 +20,7 @@ class TestTime(TestCase):
         # GIVEN
         args = {
             # 34_200 seconds = 9:30 AM
-            "Seconds Since Midnight": 34_200
+            "Time": 34_200
         }
         parameters = Parameters.from_dictionary(args)
         msg_bytes = get_time(parameters)

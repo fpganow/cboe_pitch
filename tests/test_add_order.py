@@ -88,7 +88,7 @@ class TestAddOrder(TestCase):
             side="B",
             quantity=20_000,
             symbol="AAPL",
-            price=0.9050,
+            price=90.50,
         )
 
         # WHEN
@@ -126,7 +126,7 @@ class TestAddOrder(TestCase):
                             0x4C,
                             0x20,
                             0x20,  # Symbol
-                            0x5A,
+                            0x5A,  # Price
                             0x23,  # Price
                             0x01,  # AddBitField
                         ]
@@ -141,7 +141,7 @@ class TestAddOrder(TestCase):
         assert_that(message.side(), equal_to("B"))
         assert_that(message.quantity(), equal_to(20_000))
         assert_that(message.symbol(), equal_to("AAPL"))
-        assert_that(message.price(), equal_to(0.9050))
+        assert_that(message.price(), equal_to(90.50))
         assert_that(message.displayed(), equal_to(True))
 
     def test_add_order_expanded(self):
@@ -306,13 +306,13 @@ class TestAddOrder(TestCase):
                 0x42,  # Side Indicator
                 0x20,
                 0x4E,  # Quantity
-                0x41,
+                0x41,  # Symbol
                 0x41,
                 0x50,
                 0x4C,
                 0x20,
                 0x20,  # Symbol
-                0x5A,
+                0x5A,  # Price
                 0x23,  # Price
                 0x01,  # AddBitField
             ]
@@ -327,7 +327,7 @@ class TestAddOrder(TestCase):
         assert_that(message.order_id(), equal_to("ORID0002"))
         assert_that(message.side(), equal_to("B"))
         assert_that(message.symbol(), equal_to("AAPL"))
-        assert_that(message.price(), equal_to(0.9050))
+        assert_that(message.price(), equal_to(90.50)) # Binary Short Price (2 implied decimal places)
         assert_that(message.displayed(), equal_to(True))
 
     def test_add_order_expanded_parse(self):
