@@ -15,12 +15,12 @@ from .trade import TradeLong, TradeShort, TradeExpanded
 class Generator(object):
     """ """
     class MsgType(Enum):
-        Add = auto(),
-        Edit = auto(),
-        Remove = auto()
+        Add = 1
+        Edit = 2
+        Remove = 3
     class Side(Enum):
-        Buy = auto(),
-        Sell = auto()
+        Buy = 1
+        Sell = 2
 
     def __init__(
         self,
@@ -186,6 +186,11 @@ class Generator(object):
         self._current_time = self._current_time + timedelta(seconds=self._rate)
         return next_time
 
+    def _pickRandom(self, in_list):
+        list_len = len(in_list)
+        rand_idx = self._rng.integers(low=0, high=list_len)
+        return in_list[rand_idx]
+
     def _pickMsgType(self, ticker: str, side: 'Generator.Side'):
         if ticker not in self._orderBook:
             self._orderBook[ticker] = {
@@ -194,15 +199,18 @@ class Generator(object):
             }
         msg_type_univ = None
         # Is book too small?
-        if len(self._orderBook[ticker][side].items()) < self._book_size_range[0]:
+        if len(self._orderBook[ticker][side]) < self._book_size_range[0]:
             # We want an Add
+            print(f'ADD')
             msg_type_univ = self._msgTypes[Generator.MsgType.Add]
         # Is book too big?
-        elif len(self._orderBook[ticker][side].items()) > self._book_size_range[1]:
+        elif len(self._orderBook[ticker][side]) > self._book_size_range[1]:
             # We want a Delete
+            print(f'DELETE')
             msg_type_univ = self._msgTypes[Generator.MsgType.Remove]
         else:
             # Else - randomly choose before
+            print(f'ELSE')
             rnd_num = self._rng.integers(low=1, high=3)
             if rnd_num == 1:
                 msg_type_univ = self._msgTypes[Generator.MsgType.Add]
@@ -212,22 +220,27 @@ class Generator(object):
                 msg_type_univ = self._msgTypes[Generator.MsgType.Remove]
             else:
                 raise Exception('Error generating a random number')
-        return type(AddOrderLong)
+        return self._pickRandom(list(msg_type_univ))
+
+    def _pickSizeAndPrice(self, ticker, side, new_timestamp, new_msg_type):
+        # ModifyOrderShort,
+        # ModifyOrderLong,
+        # OrderExecutedAtPriceSize,
+        # ReduceSizeShort,
+        # ReduceSizeLong
+        pass
 
     def getNextMsg(self):
         """
-        1 - Select a ticker
-        2 - Select message time
-        3 - Select message type
-        4 - Track changes to internal state
-        5 - Return
         """
-        # 1 - Select a ticker
+        # 1 - Pick Ticker
         ticker = self._pickTicker()
-        # 2 - Pick a side
+        # 2 - Pick Side
         side = self._pickSide()
-        # 3 - Get message time
+        # 3 - Pick Message Time
         new_timestamp = self._pickTime()
-        # 4 - Message type
+        # 4 - Pick Message type
         #  - Should take into account current OrderBook for selected Symbol
         new_msg_type = self._pickMsgType()
+        # 5 - Pick Price and Size
+        new_ord_price_size = self._pickSizeAndPrice()

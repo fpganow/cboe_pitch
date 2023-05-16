@@ -1,7 +1,7 @@
 from datetime import datetime
 from unittest import TestCase
 
-from hamcrest import assert_that, equal_to, has_length, is_
+from hamcrest import any_of, assert_that, equal_to, has_length, is_, is_in
 from pitch.generator import Generator
 
 from pitch.add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
@@ -11,6 +11,8 @@ from pitch.reduce_size import ReduceSizeLong, ReduceSizeShort
 
 
 class TestGenerator(TestCase):
+
+    # 1 - Pick Ticker
     def test_pickTicker_EdgeCase_0(self):
         # GIVEN
         watchList = []
@@ -44,7 +46,35 @@ class TestGenerator(TestCase):
         # THEN
         assert_that(ticker, equal_to("MSFT"))
 
-    def test_timeOfFirstMessage(self):
+    # 2 - Pick Side
+    def test_pickSide_Buy(self):
+        # GIVEN
+        watchList = [("TSLA", 1.00)]
+        gen = Generator(
+            watch_list=watchList, seed=200
+        )
+
+        # WHEN
+        side = gen._pickSide()
+
+        # THEN
+        assert_that(side, equal_to(Generator.Side.Buy))
+
+    def test_pickSide_Sell(self):
+        # GIVEN
+        watchList = [("TSLA", 1.00)]
+        gen = Generator(
+            watch_list=watchList, seed=10
+        )
+
+        # WHEN
+        side = gen._pickSide()
+
+        # THEN
+        assert_that(side, equal_to(Generator.Side.Sell))
+
+    # 3 - Pick Message Time
+    def test_pickTime_firstMessage(self):
         # GIVEN
         # Start Time: 9:30 AM
         # Rate of messages:
@@ -69,7 +99,7 @@ class TestGenerator(TestCase):
         # THEN
         assert_that(msg_time, equal_to(datetime(2023, 5, 7, 9, 30, 0)))
 
-    def test_timeOfFirst_5_Messages(self):
+    def test_pickTime_first_5_Messages(self):
         # GIVEN
         watchList = [("TSLA", 1.00)]
         gen = Generator(
@@ -90,20 +120,8 @@ class TestGenerator(TestCase):
         assert_that(msg_time_4, equal_to(datetime(2023, 5, 7, 9, 36, 0)))
         assert_that(msg_time_5, equal_to(datetime(2023, 5, 7, 9, 38, 0)))
 
-    def test_pickSide(self):
-        # GIVEN
-        watchList = [("TSLA", 1.00)]
-        gen = Generator(
-            watch_list=watchList, seed=10
-        )
-
-        # WHEN
-        side = gen._pickSide()
-        print(f'side: {side}')
-        # THEN
-
-
-    def DISABLED_test_pickMsgType_empty_orderbook(self):
+    # 4 - Pick Message Type
+    def test_pickMsgType_empty_orderbook(self):
         # GIVEN
         watchList = [("TSLA", 1.00)]
         gen = Generator(
@@ -116,116 +134,78 @@ class TestGenerator(TestCase):
         new_msg_type = gen._pickMsgType(ticker=ticker, side=side)
 
         # THEN
-        assert_that(new_msg_type, equal_to(type(AddOrderLong)))
+        assert_that(new_msg_type, any_of(AddOrderLong, AddOrderShort, AddOrderExpanded))
 
-#    def test_pickMsgType_several_orders(self):
-#        # GIVEN
-#        watchList = [("TSLA", 1.00)]
-#        gen = Generator(
-#            watch_list=watchList,
-#            rate=30,
-#            start_time=datetime(2023, 5, 7, 9, 30, 0),
-#            book_size_range=(3, 5),
-#            price_range=(50.00, 52.00),
-#        )
-#
-#        # WHEN
-#        new_messages = []
-#        new_messages.append(gen._pickMsgType())
-#
-#        # THEN
-#        assert_that(new_messages[0], equal_to(type(AddOrderLong)))
+    def test_pickMsgType_too_many_orders(self):
+        # GIVEN
+        watchList = [("TSLA", 1.00)]
+        gen = Generator(
+            watch_list=watchList,
+            rate=30,
+            start_time=datetime(2023, 5, 7, 9, 30, 0),
+            book_size_range = (1, 3)
+        )
+        ticker='TSLA'
+        side=Generator.Side.Buy
+        gen._orderBook[ticker] = {
+                Generator.Side.Buy: [ (50.05, 100), (50.04, 100),
+                                      (50.03, 100), (50.02, 100)
+                    ],
+                Generator.Side.Sell: []
+        }
 
-#    def test_smoke(self):
-#        # GIVEN
-#        watchList = [('AAPL', 0.40)]
-#        rate = 10_000
-#        totalTime = 60
-#
-#        # WHEN
-#        gen = Generator(watchList=watchList, rate=rate, totalTime=totalTime)
-#        msg = gen.getNext()
-#
-#        # THEN
-#        assert_that(messages, has_length(10))
-#
-#    def test_trade_long(self):
-#        # GIVEN
-#        message = TradeLong.from_parms(time_offset=447_000,
-#                                       order_id='ORID0001',
-#                                       side='B',
-#                                       quantity=20_000,
-#                                       symbol='AAPL',
-#                                       price=100.99,
-#                                       execution_id='EXEID001')
-#
-#        # WHEN
-#        msg_bytes = message.get_bytes()
-#
-#        # THEN
-#        assert_that(msg_bytes, has_length(41))
-#        assert_that(msg_bytes, is_(compare_bytes(bytearray([
-#            41,  # Length
-#            0x2A,  # Message Type
-#            0x18, 0xD2, 6, 0,  # Time offset
-#            0x4f, 0x52, 0x49, 0x44, 0x30, 0x30, 0x30, 0x31,  # Order Id
-#            0x42,  # Side Indicator
-#            0x20, 0x4E, 0x0, 0x0,  # Quantity
-#            0x41, 0x41, 0x50, 0x4c, 0x20, 0x20,  # Symbol
-#            0xec, 0x68, 0xf, 0, 0, 0, 0, 0,  # Price
-#            0x45, 0x58, 0x45, 0x49, 0x44, 0x30, 0x30, 0x31,  # Execution Id
-#        ]))))
-#
-#    def test_trade_short(self):
-#        # GIVEN
-#        message = TradeShort.from_parms(time_offset=447_000,
-#                                        order_id='ORID0001',
-#                                        side='B',
-#                                        quantity=20_000,
-#                                        symbol='AAPL',
-#                                        price=100.99,
-#                                        execution_id='EXE10012')
-#
-#        # WHEN
-#        msg_bytes = message.get_bytes()
-#
-#        # THEN
-#        assert_that(msg_bytes, has_length(33))
-#        assert_that(msg_bytes, is_(compare_bytes(bytearray([
-#            33,  # Length
-#            0x2B,  # Message Type
-#            0x18, 0xD2, 6, 0,  # Time offset
-#            0x4f, 0x52, 0x49, 0x44, 0x30, 0x30, 0x30, 0x31,  # Order Id
-#            0x42,  # Side Indicator
-#            0x20, 0x4E,  # Quantity
-#            0x41, 0x41, 0x50, 0x4c, 0x20, 0x20,  # Symbol
-#            0x73, 0x27,  # Price
-#            0x45, 0x58, 0x45, 0x31, 0x30, 0x30, 0x31, 0x32,  # Execution Id
-#        ]))))
-#
-#    def test_trade_expanded(self):
-#        # GIVEN
-#        message = TradeExpanded.from_parms(time_offset=447_000,
-#                                           order_id='ORID0001',
-#                                           side='B',
-#                                           quantity=20_000,
-#                                           symbol='AAPL',
-#                                           price=100.99,
-#                                           execution_id='EXEID001')
-#
-#        # WHEN
-#        msg_bytes = message.get_bytes()
-#
-#        # THEN
-#        assert_that(msg_bytes, has_length(43))
-#        assert_that(msg_bytes, is_(compare_bytes(bytearray([
-#            43,  # Length
-#            0x30,  # Message Type
-#            0x18, 0xD2, 6, 0,  # Time offset
-#            0x4f, 0x52, 0x49, 0x44, 0x30, 0x30, 0x30, 0x31,  # Order Id
-#            0x42,  # Side Indicator
-#            0x20, 0x4E, 0x0, 0x0,  # Quantity
-#            0x41, 0x41, 0x50, 0x4c, 0x20, 0x20, 0x20, 0x20,  # Symbol
-#            0xec, 0x68, 0xf, 0, 0, 0, 0, 0,  # Price
-#            0x45, 0x58, 0x45, 0x49, 0x44, 0x30, 0x30, 0x31,  # Execution Id
-#        ]))))
+        # WHEN
+        new_msg_type = gen._pickMsgType(ticker=ticker, side=side)
+
+        # THEN
+        assert_that(new_msg_type, is_in(gen._msgTypes[Generator.MsgType.Remove]))
+
+    def test_pickMsgType_within_size(self):
+        # GIVEN
+        watchList = [("TSLA", 1.00)]
+        gen = Generator(
+            watch_list=watchList,
+            rate=30,
+            start_time=datetime(2023, 5, 7, 9, 30, 0),
+            book_size_range = (1, 3)
+        )
+        ticker='TSLA'
+        side=Generator.Side.Buy
+        gen._orderBook[ticker] = {
+                Generator.Side.Buy: [ (50.05, 100), (50.04, 100),
+                                      (50.02, 100)
+                    ],
+                Generator.Side.Sell: []
+        }
+
+        # WHEN
+        new_msg_type = gen._pickMsgType(ticker=ticker, side=side)
+
+        # THEN
+        assert_that(new_msg_type, is_in(gen._msgTypes[Generator.MsgType.Edit]))
+
+    def test_smoke(self):
+        # GIVEN
+        watchList = [("TSLA", 1.00)]
+        gen = Generator(
+            watch_list=watchList,
+            rate=30,
+            start_time=datetime(2023, 5, 7, 9, 30, 0),
+            book_size_range = (1, 3)
+        )
+        ticker='TSLA'
+        side=Generator.Side.Buy
+        gen._orderBook[ticker] = {
+                Generator.Side.Buy: [ (50.05, 100), (50.04, 100),
+                                      (50.02, 100)
+                    ],
+                Generator.Side.Sell: []
+        }
+
+        # WHEN
+        new_msg_type = gen._pickMsgType(ticker=ticker, side=side)
+
+        print(f'new_msg_type: {new_msg_type}')
+
+        # THEN
+        assert_that(new_msg_type, is_in(gen._msgTypes[Generator.MsgType.Edit]))
