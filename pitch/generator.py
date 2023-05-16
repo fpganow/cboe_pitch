@@ -1,24 +1,35 @@
 from datetime import datetime, timedelta
 from typing import List, Tuple
+from enum import auto, Enum
 import numpy as np
 import random
 
-from pitch.add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
-from pitch.order_executed import OrderExecuted, OrderExecutedAtPriceSize
-from pitch.reduce_size import ReduceSizeLong, ReduceSizeShort
+from .add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
+from .delete_order import DeleteOrder
+from .modify import ModifyOrderShort, ModifyOrderLong
+from .order_executed import OrderExecuted, OrderExecutedAtPriceSize
+from .reduce_size import ReduceSizeLong, ReduceSizeShort
+from .trade import TradeLong, TradeShort, TradeExpanded
 
 
 class Generator(object):
     """ """
+    class MsgType(Enum):
+        Add = auto(),
+        Edit = auto(),
+        Remove = auto()
+    class Side(Enum):
+        Buy = auto(),
+        Sell = auto()
 
     def __init__(
         self,
         watch_list: List[Tuple[str, float]],
         rate: int = 10_000,
-        start_time: datetime=None,
+        start_time: datetime = None,
         total_time: int = 60,
         book_size_range: Tuple[int, int] = None,
-        price_range: Tuple[float, float] =  None,
+        price_range: Tuple[float, float] = None,
         seed=None,
     ):
         """
@@ -62,7 +73,7 @@ class Generator(object):
         # Watch List [ (<ticker>, <weight>), ... ]
         self._watchList = watch_list
 
-        # Rate 50_000
+        # Rate <number of messages> / <per hour>
         self._rate = 1 / (rate / 3_600)
 
         # Start Time - Time of first message
@@ -81,16 +92,39 @@ class Generator(object):
             price_range = (55.00, 2.00)
         self._price_range = price_range
         # Message Types
-        self._msgTypes = []
+        self._msgTypes = {
+                Generator.MsgType.Add: {
+                    AddOrderLong,
+                    AddOrderShort,
+                    AddOrderExpanded
+                }, 
+                Generator.MsgType.Edit: {
+                    ModifyOrderShort,
+                    ModifyOrderLong,
+                    OrderExecutedAtPriceSize,
+                    ReduceSizeShort,
+                    ReduceSizeLong
+                },
+                Generator.MsgType.Remove: {
+                    DeleteOrder,
+                    OrderExecuted,
+                    OrderExecutedAtPriceSize,
+                    TradeShort,
+                    TradeLong,
+                    TradeExpanded
+                }
+        }
 
         # Total time to generate messages for
         self._totalTime = total_time
 
         # Seed the random number generator to facilitate easier testing
         np.random.seed(seed)
+        self._rng = np.random.default_rng(seed)
 
         # Internal variable for tracking Order message creation (an orderbook)
         self._orderBook = {}
+
 
     def rchoose(self, in_list):
         """
@@ -141,17 +175,46 @@ class Generator(object):
             return None
         return self.rchoose(self._watchList)
 
+    def _pickSide(self):
+        # rng -> I typed ngr
+        if self._rng.integers(low=0, high=2) == 0:
+            return Generator.Side.Buy
+        return Generator.Side.Sell
+
     def _pickTime(self):
         next_time = self._current_time
         self._current_time = self._current_time + timedelta(seconds=self._rate)
         return next_time
 
-    def _pickMsgType(self):
-        all_add_msg_types = [AddOrderLong, AddOrderShort, AddOrderExpanded]
+    def _pickMsgType(self, ticker: str, side: 'Generator.Side'):
+        if ticker not in self._orderBook:
+            self._orderBook[ticker] = {
+                Generator.Side.Buy: [],
+                Generator.Side.Sell: []
+            }
+        msg_type_univ = None
+        # Is book too small?
+        if len(self._orderBook[ticker][side].items()) < self._book_size_range[0]:
+            # We want an Add
+            msg_type_univ = self._msgTypes[Generator.MsgType.Add]
+        # Is book too big?
+        elif len(self._orderBook[ticker][side].items()) > self._book_size_range[1]:
+            # We want a Delete
+            msg_type_univ = self._msgTypes[Generator.MsgType.Remove]
+        else:
+            # Else - randomly choose before
+            rnd_num = self._rng.integers(low=1, high=3)
+            if rnd_num == 1:
+                msg_type_univ = self._msgTypes[Generator.MsgType.Add]
+            elif rnd_num == 2:
+                msg_type_univ = self._msgTypes[Generator.MsgType.Edit]
+            elif rnd_num == 3:
+                msg_type_univ = self._msgTypes[Generator.MsgType.Remove]
+            else:
+                raise Exception('Error generating a random number')
         return type(AddOrderLong)
 
-
-    def getNext(self):
+    def getNextMsg(self):
         """
         1 - Select a ticker
         2 - Select message time
@@ -161,8 +224,10 @@ class Generator(object):
         """
         # 1 - Select a ticker
         ticker = self._pickTicker()
-        # 2 - Get message time
+        # 2 - Pick a side
+        side = self._pickSide()
+        # 3 - Get message time
         new_timestamp = self._pickTime()
-        # 3 - Message type
+        # 4 - Message type
         #  - Should take into account current OrderBook for selected Symbol
         new_msg_type = self._pickMsgType()

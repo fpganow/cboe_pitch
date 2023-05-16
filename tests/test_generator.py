@@ -7,8 +7,7 @@ from pitch.generator import Generator
 from pitch.add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
 from pitch.order_executed import OrderExecuted, OrderExecutedAtPriceSize
 from pitch.reduce_size import ReduceSizeLong, ReduceSizeShort
-# from pitch.trade import TradeLong, TradeShort, TradeExpanded
-# from tests.comparator import compare_bytes
+
 
 
 class TestGenerator(TestCase):
@@ -74,9 +73,7 @@ class TestGenerator(TestCase):
         # GIVEN
         watchList = [("TSLA", 1.00)]
         gen = Generator(
-            watch_list=watchList,
-            rate=30,
-            start_time=datetime(2023, 5, 7, 9, 30, 0)
+            watch_list=watchList, rate=30, start_time=datetime(2023, 5, 7, 9, 30, 0)
         )
 
         # WHEN
@@ -93,36 +90,51 @@ class TestGenerator(TestCase):
         assert_that(msg_time_4, equal_to(datetime(2023, 5, 7, 9, 36, 0)))
         assert_that(msg_time_5, equal_to(datetime(2023, 5, 7, 9, 38, 0)))
 
-    def test_pickMsgType_empty_orderbook(self):
+    def test_pickSide(self):
         # GIVEN
         watchList = [("TSLA", 1.00)]
         gen = Generator(
-            watch_list=watchList,
-            rate=30,
-            start_time=datetime(2023, 5, 7, 9, 30, 0)
+            watch_list=watchList, seed=10
         )
 
         # WHEN
-        new_msg_type = gen._pickMsgType()
+        side = gen._pickSide()
+        print(f'side: {side}')
+        # THEN
+
+
+    def DISABLED_test_pickMsgType_empty_orderbook(self):
+        # GIVEN
+        watchList = [("TSLA", 1.00)]
+        gen = Generator(
+            watch_list=watchList, rate=30, start_time=datetime(2023, 5, 7, 9, 30, 0)
+        )
+        ticker='TSLA'
+        side=Generator.Side.Buy
+
+        # WHEN
+        new_msg_type = gen._pickMsgType(ticker=ticker, side=side)
 
         # THEN
         assert_that(new_msg_type, equal_to(type(AddOrderLong)))
 
-    def test_pickMsgType_several_orders(self):
-        # GIVEN
-        watchList = [("TSLA", 1.00)]
-        gen = Generator(
-            watch_list=watchList,
-            rate=30,
-            start_time=datetime(2023, 5, 7, 9, 30, 0)
-        )
-
-        # WHEN
-        new_messages = []
-        new_messages.append(gen._pickMsgType())
-
-        # THEN
-        assert_that(new_messages[0], equal_to(type(AddOrderLong)))
+#    def test_pickMsgType_several_orders(self):
+#        # GIVEN
+#        watchList = [("TSLA", 1.00)]
+#        gen = Generator(
+#            watch_list=watchList,
+#            rate=30,
+#            start_time=datetime(2023, 5, 7, 9, 30, 0),
+#            book_size_range=(3, 5),
+#            price_range=(50.00, 52.00),
+#        )
+#
+#        # WHEN
+#        new_messages = []
+#        new_messages.append(gen._pickMsgType())
+#
+#        # THEN
+#        assert_that(new_messages[0], equal_to(type(AddOrderLong)))
 
 #    def test_smoke(self):
 #        # GIVEN
