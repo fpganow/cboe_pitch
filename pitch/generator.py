@@ -97,7 +97,7 @@ class Generator(object):
                     AddOrderLong,
                     AddOrderShort,
                     AddOrderExpanded
-                }, 
+                },
                 Generator.MsgType.Edit: {
                     ModifyOrderShort,
                     ModifyOrderLong,
