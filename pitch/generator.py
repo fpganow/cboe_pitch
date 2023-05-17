@@ -191,7 +191,7 @@ class Generator(object):
         rand_idx = self._rng.integers(low=0, high=list_len)
         return in_list[rand_idx]
 
-    def _pickMsgType(self, ticker: str, side: 'Generator.Side'):
+    def _pickMsgCategory(self, ticker: str, side: 'Generator.Side'):
         if ticker not in self._orderBook:
             self._orderBook[ticker] = {
                 Generator.Side.Buy: [],
@@ -201,34 +201,43 @@ class Generator(object):
         # Is book too small?
         if len(self._orderBook[ticker][side]) < self._book_size_range[0]:
             # We want an Add
-            print(f'ADD')
-            msg_type_univ = self._msgTypes[Generator.MsgType.Add]
+            print(f'MsgType.Add')
+            return Generator.MsgType.Add
         # Is book too big?
         elif len(self._orderBook[ticker][side]) > self._book_size_range[1]:
             # We want a Delete
-            print(f'DELETE')
-            msg_type_univ = self._msgTypes[Generator.MsgType.Remove]
+            print(f'MsgType.Delete')
+            return Generator.MsgType.Remove
         else:
-            # Else - randomly choose before
-            print(f'ELSE')
+            # Else - randomly choose
+            print(f'MsgType.Random')
             rnd_num = self._rng.integers(low=1, high=3)
             if rnd_num == 1:
-                msg_type_univ = self._msgTypes[Generator.MsgType.Add]
+                return Generator.MsgType.Add
             elif rnd_num == 2:
-                msg_type_univ = self._msgTypes[Generator.MsgType.Edit]
+                return Generator.MsgType.Edit
             elif rnd_num == 3:
-                msg_type_univ = self._msgTypes[Generator.MsgType.Remove]
+                return Generator.MsgType.Remove
             else:
-                raise Exception('Error generating a random number')
-        return self._pickRandom(list(msg_type_univ))
+                raise Exception('Error picking a random Message Category')
 
-    def _pickSizeAndPrice(self, ticker, side, new_timestamp, new_msg_type):
-        # ModifyOrderShort,
-        # ModifyOrderLong,
-        # OrderExecutedAtPriceSize,
-        # ReduceSizeShort,
-        # ReduceSizeLong
-        pass
+    def _getNextMsg(self, ticker, side, new_timestamp, new_msg_cat):
+        new_msg_type = self._pickRandom(list(self._msgTypes[new_msg_cat]))
+        if new_msg_cat == Generator.MsgType.Add:
+            if new_msg_type == AddOrderLong:
+                pass
+            elif new_msg_type == AddOrderShort:
+                pass
+            elif new_msg_type == AddOrderExpanded:
+                pass
+        elif new_msg_cat == Generator.MsgType.Edit:
+            if new_msg_type == AddOrderLong:
+                pass
+        elif new_msg_cat == Generator.MsgType.Remove:
+            if new_msg_type == AddOrderLong:
+                pass
+        else:
+            raise Exception('Invalid msg_type')
 
     def getNextMsg(self):
         """
@@ -240,7 +249,10 @@ class Generator(object):
         # 3 - Pick Message Time
         new_timestamp = self._pickTime()
         # 4 - Pick Message type
-        #  - Should take into account current OrderBook for selected Symbol
-        new_msg_type = self._pickMsgType()
-        # 5 - Pick Price and Size
-        new_ord_price_size = self._pickSizeAndPrice()
+        new_msg_cat = self._pickMsgCategory(ticker=ticker, side=side)
+        # 5 - Set Price and Size
+        next_msg = self._genNextMsg(ticker=ticker,
+                                    side=side,
+                                    new_timestamp=new_timestamp,
+                                    new_msg_cat=new_msg_cat)
+        return next_msg

@@ -131,10 +131,10 @@ class TestGenerator(TestCase):
         side=Generator.Side.Buy
 
         # WHEN
-        new_msg_type = gen._pickMsgType(ticker=ticker, side=side)
+        new_msg_cat = gen._pickMsgCategory(ticker=ticker, side=side)
 
         # THEN
-        assert_that(new_msg_type, any_of(AddOrderLong, AddOrderShort, AddOrderExpanded))
+        assert_that(new_msg_cat, equal_to(Generator.MsgType.Add))
 
     def test_pickMsgType_too_many_orders(self):
         # GIVEN
@@ -155,10 +155,10 @@ class TestGenerator(TestCase):
         }
 
         # WHEN
-        new_msg_type = gen._pickMsgType(ticker=ticker, side=side)
+        new_msg_cat = gen._pickMsgCategory(ticker=ticker, side=side)
 
         # THEN
-        assert_that(new_msg_type, is_in(gen._msgTypes[Generator.MsgType.Remove]))
+        assert_that(new_msg_cat, equal_to(Generator.MsgType.Remove))
 
     def test_pickMsgType_within_size(self):
         # GIVEN
@@ -167,7 +167,8 @@ class TestGenerator(TestCase):
             watch_list=watchList,
             rate=30,
             start_time=datetime(2023, 5, 7, 9, 30, 0),
-            book_size_range = (1, 3)
+            book_size_range = (1, 3),
+            seed=100
         )
         ticker='TSLA'
         side=Generator.Side.Buy
@@ -179,10 +180,10 @@ class TestGenerator(TestCase):
         }
 
         # WHEN
-        new_msg_type = gen._pickMsgType(ticker=ticker, side=side)
+        new_msg_cat = gen._pickMsgCategory(ticker=ticker, side=side)
 
         # THEN
-        assert_that(new_msg_type, is_in(gen._msgTypes[Generator.MsgType.Edit]))
+        assert_that(new_msg_cat, equal_to(Generator.MsgType.Edit))
 
     def test_smoke(self):
         # GIVEN
@@ -191,21 +192,23 @@ class TestGenerator(TestCase):
             watch_list=watchList,
             rate=30,
             start_time=datetime(2023, 5, 7, 9, 30, 0),
-            book_size_range = (1, 3)
+            book_size_range = (1, 3),
+            seed=100
         )
         ticker='TSLA'
         side=Generator.Side.Buy
         gen._orderBook[ticker] = {
-                Generator.Side.Buy: [ (50.05, 100), (50.04, 100),
-                                      (50.02, 100)
+                Generator.Side.Buy: [ (50.05, 100), (50.04, 100)
                     ],
                 Generator.Side.Sell: []
         }
 
         # WHEN
-        new_msg_type = gen._pickMsgType(ticker=ticker, side=side)
+        new_msg_type = gen._pickMsgCategory(ticker=ticker, side=side)
 
         print(f'new_msg_type: {new_msg_type}')
+        if new_msg_type == AddOrderLong:
+            print(f'AddOrderLong')
 
         # THEN
         assert_that(new_msg_type, is_in(gen._msgTypes[Generator.MsgType.Edit]))
