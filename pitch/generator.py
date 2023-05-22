@@ -22,6 +22,13 @@ class Generator(object):
         Buy = 1
         Sell = 2
 
+    class Order:
+        def __init__(self, ticker, side, price, quantity):
+            self._ticker = ticker
+            self._side = side
+            self._price = price
+            self._quantity = quantity
+
     def __init__(
         self,
         watch_list: List[Tuple[str, float]],
@@ -30,6 +37,7 @@ class Generator(object):
         total_time: int = 60,
         book_size_range: Tuple[int, int] = None,
         price_range: Tuple[float, float] = None,
+        size_range: Tuple[int, int] = None,
         seed=None,
     ):
         """
@@ -91,6 +99,10 @@ class Generator(object):
         if price_range is None:
             price_range = (55.00, 2.00)
         self._price_range = price_range
+        if size_range is None:
+            self._size_range = (25, 300)
+        self._size_range = size_range
+
         # Message Types
         self._msgTypes = {
                 Generator.MsgType.Add: {
@@ -172,7 +184,7 @@ class Generator(object):
         if len(self._watchList) == 1:
             return self._watchList[0][0]
         elif len(self._watchList) == 0:
-            return None
+            raise Exception('Empty watchList')
         return self.rchoose(self._watchList)
 
     def _pickSide(self):
@@ -221,9 +233,28 @@ class Generator(object):
             else:
                 raise Exception('Error picking a random Message Category')
 
+    def _pickPriceSize(self):
+        new_price = self._price_range[0] + (self._rng.random() * 
+                (self._price_range[1] - self._price_range[0]) )
+
+        increment = 25
+        r_1 = self._rng.random()
+        r_2 = (self._size_range[1] - self._size_range[0]) // increment
+        r_idx = self._rng.integers(low=0, high=r_2+1)
+
+        new_price = np.around(new_price, decimals=2)
+        new_size = self._size_range[0] + (r_idx * increment)
+
+        return (new_price, new_size)
+
+
     def _getNextMsg(self, ticker, side, new_timestamp, new_msg_cat):
         new_msg_type = self._pickRandom(list(self._msgTypes[new_msg_cat]))
         if new_msg_cat == Generator.MsgType.Add:
+            print(f'Adding a new order via {new_msg_cat}')
+            (new_price, new_size) = self._pickPriceSize()
+            print(f' - Price: {new_price}')
+            print(f' - Size: {new_size}')
             if new_msg_type == AddOrderLong:
                 pass
             elif new_msg_type == AddOrderShort:
@@ -231,10 +262,22 @@ class Generator(object):
             elif new_msg_type == AddOrderExpanded:
                 pass
         elif new_msg_cat == Generator.MsgType.Edit:
+            print(f'Modifying an existing order via {new_msg_cat}')
             if new_msg_type == AddOrderLong:
                 pass
         elif new_msg_cat == Generator.MsgType.Remove:
-            if new_msg_type == AddOrderLong:
+            print(f'Removing an existing order via {new_msg_cat}')
+            if new_msg_type == DeleteOrder:
+                pass
+            elif new_msg_type == OrderExecuted:
+                pass
+            elif new_msg_type == OrderExecutedAtPriceSize:
+                pass
+            elif new_msg_type == TradeShort:
+                pass
+            elif new_msg_type == TradeLong:
+                pass
+            elif new_msg_type == TradeExpanded:
                 pass
         else:
             raise Exception('Invalid msg_type')
@@ -248,11 +291,16 @@ class Generator(object):
         side = self._pickSide()
         # 3 - Pick Message Time
         new_timestamp = self._pickTime()
-        # 4 - Pick Message type
+        # 4 - Pick Message Category
         new_msg_cat = self._pickMsgCategory(ticker=ticker, side=side)
         # 5 - Set Price and Size
-        next_msg = self._genNextMsg(ticker=ticker,
+        next_msg = self._getNextMsg(ticker=ticker,
                                     side=side,
                                     new_timestamp=new_timestamp,
                                     new_msg_cat=new_msg_cat)
+        # 6 - Update local state
+        # 7 - Return new order
         return next_msg
+
+    def print_OrderBook(self):
+        ...

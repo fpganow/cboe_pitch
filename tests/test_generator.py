@@ -19,10 +19,8 @@ class TestGenerator(TestCase):
         gen = Generator(watch_list=watchList)
 
         # WHEN
-        ticker = gen._pickTicker()
-
-        # THEN
-        assert_that(ticker, equal_to(None))
+        with self.assertRaises(Exception):
+            gen._pickTicker()
 
     def test_pickTicker_EdgeCase_1(self):
         # GIVEN
@@ -185,6 +183,33 @@ class TestGenerator(TestCase):
         # THEN
         assert_that(new_msg_cat, equal_to(Generator.MsgType.Edit))
 
+    def test_pickPriceSize_Size_25_500(self):
+        # GIVEN
+        watchList = [("TSLA", 1.00)]
+        gen = Generator(
+            watch_list=watchList,
+            rate=30,
+            start_time=datetime(2023, 5, 7, 9, 30, 0),
+            book_size_range = (1, 3),
+            price_range = (50, 55),
+            size_range = (25, 100),
+            seed=500
+        )
+        ticker='TSLA'
+        side=Generator.Side.Buy
+        gen._orderBook[ticker] = {
+                Generator.Side.Buy: [ (50.05, 100), (50.04, 100)
+                    ],
+                Generator.Side.Sell: []
+        }
+
+        # WHEN
+        (new_price, new_size) = gen._pickPriceSize()
+
+        # THEN
+        assert_that(new_price, equal_to(52.83))
+        assert_that(new_size, equal_to(50))
+
     def test_smoke(self):
         # GIVEN
         watchList = [("TSLA", 1.00)]
@@ -204,11 +229,14 @@ class TestGenerator(TestCase):
         }
 
         # WHEN
-        new_msg_type = gen._pickMsgCategory(ticker=ticker, side=side)
+        new_msg = gen._getNextMsg(ticker=ticker,
+                                  side=side,
+                                  new_timestamp=gen._pickTime(),
+                                  new_msg_cat=Generator.MsgType.Add)
 
-        print(f'new_msg_type: {new_msg_type}')
-        if new_msg_type == AddOrderLong:
+        print(f'new_msg: {new_msg}')
+        if new_msg == AddOrderLong:
             print(f'AddOrderLong')
 
         # THEN
-        assert_that(new_msg_type, is_in(gen._msgTypes[Generator.MsgType.Edit]))
+        assert_that(new_msg, is_in(gen._msgTypes[Generator.MsgType.Edit]))
