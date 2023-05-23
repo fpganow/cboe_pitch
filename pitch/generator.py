@@ -100,7 +100,7 @@ class Generator(object):
             price_range = (55.00, 2.00)
         self._price_range = price_range
         if size_range is None:
-            self._size_range = (25, 300)
+            size_range = (25, 300)
         self._size_range = size_range
 
         # Message Types
@@ -133,6 +133,8 @@ class Generator(object):
         # Seed the random number generator to facilitate easier testing
         np.random.seed(seed)
         self._rng = np.random.default_rng(seed)
+
+        self._nextOrderNum = 0
 
         # Internal variable for tracking Order message creation (an orderbook)
         self._orderBook = {}
@@ -247,20 +249,51 @@ class Generator(object):
 
         return (new_price, new_size)
 
+    def _getNextOrderId(self):
+        self._nextOrderNum += 1
+        return f'ORID{self._nextOrderNum:04d}'
 
     def _getNextMsg(self, ticker, side, new_timestamp, new_msg_cat):
         new_msg_type = self._pickRandom(list(self._msgTypes[new_msg_cat]))
+        new_order_id = self._getNextOrderId()
+
         if new_msg_cat == Generator.MsgType.Add:
             print(f'Adding a new order via {new_msg_cat}')
             (new_price, new_size) = self._pickPriceSize()
+
             print(f' - Price: {new_price}')
             print(f' - Size: {new_size}')
             if new_msg_type == AddOrderLong:
-                pass
+                message = AddOrderLong.from_parms(
+                    time_offset=new_timestamp,
+                    order_id="ORID0001",
+                    side=side,
+                    quantity=new_size,
+                    symbol=ticker,
+                    price=new_price,
+                )
             elif new_msg_type == AddOrderShort:
-                pass
+                message = AddOrderShort.from_parms(
+                    time_offset=new_timestamp,
+                    order_id="ORID0001",
+                    side=side,
+                    quantity=new_size,
+                    symbol=ticker,
+                    price=new_price,
+                    )
             elif new_msg_type == AddOrderExpanded:
-                pass
+                message = AddOrderExpanded.from_parms(
+                        time_offset=99_000,
+                        order_id="ORID0991",
+                        side="S",
+                        quantity=20_000,
+                        symbol="AAPL",
+                        price=0.9050,
+                        displayed=True,
+                        participant_id="MPID",
+                        customer_indicator="C",
+                    )
+            return message
         elif new_msg_cat == Generator.MsgType.Edit:
             print(f'Modifying an existing order via {new_msg_cat}')
             if new_msg_type == AddOrderLong:

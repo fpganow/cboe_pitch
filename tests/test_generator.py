@@ -210,7 +210,32 @@ class TestGenerator(TestCase):
         assert_that(new_price, equal_to(52.83))
         assert_that(new_size, equal_to(50))
 
-    def test_smoke(self):
+    def test_next_order_id(self):
+        # GIVEN
+        watchList = [("TSLA", 1.00)]
+        gen = Generator(
+            watch_list=watchList)
+
+        # WHEN
+        next_order_id = gen._getNextOrderId()
+
+        # THEN
+        assert_that(next_order_id, equal_to("ORID0001"))
+
+    def test_next_order_id_3_digit(self):
+        # GIVEN
+        watchList = [("TSLA", 1.00)]
+        gen = Generator(
+            watch_list=watchList)
+
+        # WHEN
+        gen._nextOrderNum += 99
+        next_order_id = gen._getNextOrderId()
+
+        # THEN
+        assert_that(next_order_id, equal_to("ORID0100"))
+
+    def test_addOrder(self):
         # GIVEN
         watchList = [("TSLA", 1.00)]
         gen = Generator(
@@ -234,9 +259,73 @@ class TestGenerator(TestCase):
                                   new_timestamp=gen._pickTime(),
                                   new_msg_cat=Generator.MsgType.Add)
 
-        print(f'new_msg: {new_msg}')
-        if new_msg == AddOrderLong:
-            print(f'AddOrderLong')
+        print(f'new_msg: {str(new_msg)}')
 
         # THEN
-        assert_that(new_msg, is_in(gen._msgTypes[Generator.MsgType.Edit]))
+        assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Add]))
+        #assert_that(new_msg.ticker(), equal_to('TSLA'))
+        assert_that(gen._orderBook[ticker][Generator.Side.Buy], has_length(3))
+
+    def test_editOrder(self):
+        # GIVEN
+        watchList = [("TSLA", 1.00)]
+        gen = Generator(
+            watch_list=watchList,
+            rate=30,
+            start_time=datetime(2023, 5, 7, 9, 30, 0),
+            book_size_range = (1, 3),
+            seed=100
+        )
+        ticker='TSLA'
+        side=Generator.Side.Buy
+        gen._orderBook[ticker] = {
+                Generator.Side.Buy: [ (50.05, 100), (50.04, 100),
+                    (50.03, 50)
+                    ],
+                Generator.Side.Sell: []
+        }
+
+        # WHEN
+        new_msg = gen._getNextMsg(ticker=ticker,
+                                  side=side,
+                                  new_timestamp=gen._pickTime(),
+                                  new_msg_cat=Generator.MsgType.Add)
+
+        print(f'new_msg: {str(new_msg)}')
+
+        # THEN
+        assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Edit]))
+        #assert_that(new_msg.ticker(), equal_to('TSLA'))
+        assert_that(gen._orderBook[ticker][Generator.Side.Buy], has_length(3))
+
+    def test_deleteOrder(self):
+        # GIVEN
+        watchList = [("TSLA", 1.00)]
+        gen = Generator(
+            watch_list=watchList,
+            rate=30,
+            start_time=datetime(2023, 5, 7, 9, 30, 0),
+            book_size_range = (1, 2),
+            seed=100
+        )
+        ticker='TSLA'
+        side=Generator.Side.Buy
+        gen._orderBook[ticker] = {
+                Generator.Side.Buy: [ (50.05, 100), (50.04, 100),
+                    (50.03, 50)
+                    ],
+                Generator.Side.Sell: []
+        }
+
+        # WHEN
+        new_msg = gen._getNextMsg(ticker=ticker,
+                                  side=side,
+                                  new_timestamp=gen._pickTime(),
+                                  new_msg_cat=Generator.MsgType.Add)
+
+        print(f'new_msg: {str(new_msg)}')
+
+        # THEN
+        assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Edit]))
+        #assert_that(new_msg.ticker(), equal_to('TSLA'))
+        assert_that(gen._orderBook[ticker][Generator.Side.Buy], has_length(2))
