@@ -239,6 +239,35 @@ class MessageBase(object):
         )
         return execution_id_ba.decode("utf-8")
 
+    def __str__(self) -> str:
+        # time
+        # time_offset
+        # order_id
+        # side
+        # quantity
+        # symbol
+        # price
+        # displayed
+        # executed_quantity
+        # remaining_quantity
+        # execution_id
+        msg_str = "("
+        for field_spec in self._field_specs.items():
+            if field_spec[0] == FieldName.Symbol:
+                msg_str += f'{self.symbol()}, '
+            elif field_spec[0] == FieldName.Price:
+                msg_str += f'${self.price()}, '
+            elif field_spec[0] == FieldName.SideIndicator:
+                msg_str += f'{self.side()}, '
+            elif field_spec[0] == FieldName.OrderId:
+                msg_str += f'{self.order_id()}, '
+            elif field_spec[0] == FieldName.Quantity:
+                msg_str += f'{self.quantity()}, '
+            else:
+                print(f'key: {field_spec[0]}')
+        msg_str = msg_str[:-2]
+        msg_str += ")"
+        return msg_str
 
 class Heartbeat:
     """

@@ -248,7 +248,17 @@ class TestGenerator(TestCase):
         ticker='TSLA'
         side=Generator.Side.Buy
         gen._orderBook[ticker] = {
-                Generator.Side.Buy: [ (50.05, 100), (50.04, 100)
+                Generator.Side.Buy: [
+                    Generator.Order(ticker=ticker,
+                                    side=side,
+                                    price=50.05,
+                                    quantity=100,
+                                    orderId="ORID0001"),
+                    Generator.Order(ticker=ticker,
+                                    side=side,
+                                    price=50.04,
+                                    quantity=100,
+                                    orderId="ORID0002"),
                     ],
                 Generator.Side.Sell: []
         }
@@ -327,5 +337,5 @@ class TestGenerator(TestCase):
 
         # THEN
         assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Edit]))
-        #assert_that(new_msg.ticker(), equal_to('TSLA'))
+        assert_that(new_msg.symbol(), equal_to('TSLA'))
         assert_that(gen._orderBook[ticker][Generator.Side.Buy], has_length(2))

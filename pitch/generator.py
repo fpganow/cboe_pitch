@@ -19,15 +19,16 @@ class Generator(object):
         Edit = 2
         Remove = 3
     class Side(Enum):
-        Buy = 1
-        Sell = 2
+        Buy = 'B'
+        Sell = 'S'
 
     class Order:
-        def __init__(self, ticker, side, price, quantity):
+        def __init__(self, ticker, side, price, quantity, orderId):
             self._ticker = ticker
             self._side = side
             self._price = price
             self._quantity = quantity
+            self._orderId = orderId
 
     def __init__(
         self,
@@ -253,20 +254,37 @@ class Generator(object):
         self._nextOrderNum += 1
         return f'ORID{self._nextOrderNum:04d}'
 
+    def _updateOrderBook(self, msg_cat, next_msg):
+        ticker = next_msg.ticker()
+        side = Generator.Side.Buy if next_msg.side() == 'B' else Generator.Side.Sell
+        print(f'Adding order: {ticker}-{side}')
+        if msg_cat == Generator.MsgType.Add:
+            self._orderBook[ticker][side].append(
+                    Generator.Order(ticker=ticker,
+                                    side=side,
+                                    price=next_msg.price(),
+                                    quantity=next_msg.quantity(),
+                                    orderId=next_msg.orderId()),
+                    )
+        elif msg_cat == Generator.MsgType.Edit:
+            pass
+        elif msg_cat == Generator.MsgType.Remove:
+            pass
+
     def _getNextMsg(self, ticker, side, new_timestamp, new_msg_cat):
         new_msg_type = self._pickRandom(list(self._msgTypes[new_msg_cat]))
         new_order_id = self._getNextOrderId()
 
         if new_msg_cat == Generator.MsgType.Add:
-            print(f'Adding a new order via {new_msg_cat}')
+            #print(f'Adding a new order via {new_msg_cat}')
             (new_price, new_size) = self._pickPriceSize()
 
-            print(f' - Price: {new_price}')
-            print(f' - Size: {new_size}')
+            #print(f' - Price: {new_price}')
+            #print(f' - Size: {new_size}')
             if new_msg_type == AddOrderLong:
                 message = AddOrderLong.from_parms(
                     time_offset=new_timestamp,
-                    order_id="ORID0001",
+                    order_id=new_order_id,
                     side=side,
                     quantity=new_size,
                     symbol=ticker,
@@ -275,7 +293,7 @@ class Generator(object):
             elif new_msg_type == AddOrderShort:
                 message = AddOrderShort.from_parms(
                     time_offset=new_timestamp,
-                    order_id="ORID0001",
+                    order_id=new_order_id,
                     side=side,
                     quantity=new_size,
                     symbol=ticker,
@@ -283,12 +301,12 @@ class Generator(object):
                     )
             elif new_msg_type == AddOrderExpanded:
                 message = AddOrderExpanded.from_parms(
-                        time_offset=99_000,
-                        order_id="ORID0991",
-                        side="S",
-                        quantity=20_000,
-                        symbol="AAPL",
-                        price=0.9050,
+                        time_offset=new_timestamp,
+                        order_id=new_order_id,
+                        side=side,
+                        quantity=new_size,
+                        symbol=ticker,
+                        price=new_price,
                         displayed=True,
                         participant_id="MPID",
                         customer_indicator="C",
@@ -332,6 +350,8 @@ class Generator(object):
                                     new_timestamp=new_timestamp,
                                     new_msg_cat=new_msg_cat)
         # 6 - Update local state
+        self._updateOrderBook(new_msg_cat, next_msg)
+
         # 7 - Return new order
         return next_msg
 
