@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List, Tuple
-from enum import auto, Enum
+from enum import Enum
 import numpy as np
-import random
 
 from .add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
 from .delete_order import DeleteOrder
@@ -10,6 +9,36 @@ from .modify import ModifyOrderShort, ModifyOrderLong
 from .order_executed import OrderExecuted, OrderExecutedAtPriceSize
 from .reduce_size import ReduceSizeLong, ReduceSizeShort
 from .trade import TradeLong, TradeShort, TradeExpanded
+
+class WatchListItem:
+    def __init__(self,
+                 ticker: str,
+                 weight: float,
+                 book_size_range: Tuple[int, int] = None,
+                 price_range: Tuple[float, float] = None,
+                 size_range: Tuple[float, float] = None) -> object:
+        self._ticker = ticker
+        self._weight = weight
+
+        # Optimal Book Size
+        if book_size_range is None:
+            book_size_range = (10, 20)
+        self._book_size_range = book_size_range
+
+        if price_range is None:
+            price_range = (55.00, 75.00)
+        self._price_range = price_range
+
+        if size_range is None:
+            size_range = (25, 300)
+        self._size_range = size_range
+
+    @property
+    def ticker(self):
+        return self._ticker
+    @property
+    def weight(self):
+        return self._weight
 
 
 class Generator(object):
@@ -23,22 +52,22 @@ class Generator(object):
         Sell = 'S'
 
     class Order:
-        def __init__(self, ticker, side, price, quantity, orderId):
+        def __init__(self, ticker, side, price, quantity, order_id):
             self._ticker = ticker
             self._side = side
             self._price = price
             self._quantity = quantity
-            self._orderId = orderId
+            self._orderId = order_id
 
     def __init__(
         self,
-        watch_list: List[Tuple[str, float]],
-        rate: int = 10_000,
+        watch_list: List[WatchListItem],
+        msg_rate_p_sec: int = 10_000,
         start_time: datetime = None,
-        total_time: int = 60,
-        book_size_range: Tuple[int, int] = None,
-        price_range: Tuple[float, float] = None,
-        size_range: Tuple[int, int] = None,
+        total_time_s: int = 60,
+#        book_size_range: Tuple[int, int] = None,
+#        price_range: Tuple[float, float] = None,
+#        size_range: Tuple[int, int] = None,
         seed=None,
     ):
         """
@@ -50,7 +79,11 @@ class Generator(object):
                 to specify that 40% of all generated messages are
                 related to AAPL, and 60% TSLA:
 
-                    [ ('AAPL', .40), ('TSLA', .60) ]
+                    [ (<ticker>, <weight>,
+                       (<min_book_size>, <max_book_size>),
+                       (<min_price>, <max_price>),
+                       (<min_size>, <max_size>)
+                       )
 
             rate
                 Rate in number of messages per hour
@@ -79,30 +112,34 @@ class Generator(object):
                 Price, one standard deviation
                 Target price, and the size of one standard deviation
         """
-        # Watch List [ (<ticker>, <weight>), ... ]
-        self._watchList = watch_list
+        if len(watch_list) == 0:
+            raise Exception('WatchList size == 0')
+        self._watch_list = watch_list
 
-        # Rate <number of messages> / <per hour>
-        self._rate = 1 / (rate / 3_600)
+        # Rate <number of messages> / <per second>
+        self._msg_rate_p_sec = msg_rate_p_sec
 
         # Start Time - Time of first message
+        # Current Time - Keep track of time for next message
         if start_time is None:
             start_time = datetime.now()
-        self._start_time = start_time
-        # Current Time - Keep track of time for next message
         self._current_time = start_time
 
-        # Optimal Book Size
-        if book_size_range is None:
-            book_size_range = (10, 20)
-        self._book_size_range = book_size_range
+        # Seed the random number generator to facilitate easier testing
+        np.random.seed(seed)
+        self._rng = np.random.default_rng(seed)
 
-        if price_range is None:
-            price_range = (55.00, 2.00)
-        self._price_range = price_range
-        if size_range is None:
-            size_range = (25, 300)
-        self._size_range = size_range
+        # Initialize OrderBook for each ticker in watch_list
+        self._order_book = {}
+        for watch_list_item in self._watch_list:
+            self._order_book[watch_list_item.ticker] = {
+                Generator.Side.Buy: [],
+                Generator.Side.Sell: []
+            }
+
+        return
+
+
 
         # Message Types
         self._msgTypes = {
@@ -129,11 +166,8 @@ class Generator(object):
         }
 
         # Total time to generate messages for
-        self._totalTime = total_time
+        self._totalTime = total_time_s
 
-        # Seed the random number generator to facilitate easier testing
-        np.random.seed(seed)
-        self._rng = np.random.default_rng(seed)
 
         self._nextOrderNum = 0
 
@@ -182,13 +216,9 @@ class Generator(object):
         return list1[-1]
 
     def _pickTicker(self):
-        # Get a random number
-        # Number of tickers
-        if len(self._watchList) == 1:
-            return self._watchList[0][0]
-        elif len(self._watchList) == 0:
-            raise Exception('Empty watchList')
-        return self.rchoose(self._watchList)
+        if len(self._watch_list) == 1:
+            return self._watch_list[0].ticker
+        return self.rchoose([ (x.ticker, x.weight) for x in self._watch_list])
 
     def _pickSide(self):
         # rng -> I typed ngr
@@ -198,7 +228,8 @@ class Generator(object):
 
     def _pickTime(self):
         next_time = self._current_time
-        self._current_time = self._current_time + timedelta(seconds=self._rate)
+        time_diff_ms = 1_000 // self._msg_rate_p_sec
+        self._current_time = self._current_time + timedelta(milliseconds=time_diff_ms)
         return next_time
 
     def _pickRandom(self, in_list):
@@ -207,14 +238,13 @@ class Generator(object):
         return in_list[rand_idx]
 
     def _pickMsgCategory(self, ticker: str, side: 'Generator.Side'):
-        if ticker not in self._orderBook:
-            self._orderBook[ticker] = {
-                Generator.Side.Buy: [],
-                Generator.Side.Sell: []
-            }
-        msg_type_univ = None
+        if ticker not in self._order_book:
+            raise Exception(f'Invalid Ticker "{ticker}" (not in OrderBook)')
+
+
         # Is book too small?
-        if len(self._orderBook[ticker][side]) < self._book_size_range[0]:
+        #if len(self._orderBook[ticker][side]) < self._book_size_range[0]:
+        if len(self._order_book[ticker][side]) < self._watch_list[ticker][side].book_size_range[0]:
             # We want an Add
             print(f'MsgType.Add')
             return Generator.MsgType.Add
@@ -264,7 +294,7 @@ class Generator(object):
                                     side=side,
                                     price=next_msg.price(),
                                     quantity=next_msg.quantity(),
-                                    orderId=next_msg.orderId()),
+                                    order_id=next_msg.orderId()),
                     )
         elif msg_cat == Generator.MsgType.Edit:
             pass

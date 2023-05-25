@@ -8,24 +8,25 @@ from pitch.add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
 from pitch.order_executed import OrderExecuted, OrderExecutedAtPriceSize
 from pitch.reduce_size import ReduceSizeLong, ReduceSizeShort
 
-
+from pitch.generator import WatchListItem
 
 class TestGenerator(TestCase):
 
     # 1 - Pick Ticker
     def test_pickTicker_EdgeCase_0(self):
         # GIVEN
-        watchList = []
-        gen = Generator(watch_list=watchList)
+        watch_list = []
 
         # WHEN
         with self.assertRaises(Exception):
-            gen._pickTicker()
+            gen = Generator(watch_list=watch_list)
 
     def test_pickTicker_EdgeCase_1(self):
         # GIVEN
-        watchList = [("TSLA", 0.40)]
-        gen = Generator(watch_list=watchList)
+        watch_list = [
+            WatchListItem(ticker='TSLA',
+                          weight=0.40)]
+        gen = Generator(watch_list=watch_list)
 
         # WHEN
         ticker = gen._pickTicker()
@@ -35,8 +36,11 @@ class TestGenerator(TestCase):
 
     def test_pickTicker_2_tickers(self):
         # GIVEN
-        watchList = [("TSLA", 0.20), ("MSFT", 0.80)]
-        gen = Generator(watch_list=watchList, seed=400)
+        watch_list = [
+            WatchListItem(ticker='TSLA', weight=0.20),
+            WatchListItem(ticker='MSFT', weight=0.80),
+        ]
+        gen = Generator(watch_list=watch_list, seed=400)
 
         # WHEN
         ticker = gen._pickTicker()
@@ -47,9 +51,12 @@ class TestGenerator(TestCase):
     # 2 - Pick Side
     def test_pickSide_Buy(self):
         # GIVEN
-        watchList = [("TSLA", 1.00)]
+        watch_list = [
+            WatchListItem(ticker='TSLA', weight=0.20),
+            WatchListItem(ticker='MSFT', weight=0.80),
+        ]
         gen = Generator(
-            watch_list=watchList, seed=200
+            watch_list=watch_list, seed=200
         )
 
         # WHEN
@@ -60,9 +67,12 @@ class TestGenerator(TestCase):
 
     def test_pickSide_Sell(self):
         # GIVEN
-        watchList = [("TSLA", 1.00)]
+        watch_list = [
+            WatchListItem(ticker='TSLA', weight=0.20),
+            WatchListItem(ticker='MSFT', weight=0.80),
+        ]
         gen = Generator(
-            watch_list=watchList, seed=10
+            watch_list=watch_list, seed=10
         )
 
         # WHEN
@@ -72,23 +82,16 @@ class TestGenerator(TestCase):
         assert_that(side, equal_to(Generator.Side.Sell))
 
     # 3 - Pick Message Time
-    def test_pickTime_firstMessage(self):
+    def test_pickTime_first(self):
         # GIVEN
-        # Start Time: 9:30 AM
-        # Rate of messages:
-        #   - 100 messages per hour
-        #   - per hour
-        #     60 * 60 = seconds per hour = 3600 seconds per hour
-        #   100 / (total # of seconds per hour) = 100 / 3600
-        #   becomes x seconds between each message
-        #   so 60 messages per hour becomes 60 / 3600 = 6 / 360 = 1/60
-        #   or 60 seconds between each message
-        # Time interval between messages
-        # Message times:
-        #   - 9:30
-        watchList = [("TSLA", 1.00)]
+        watch_list = [
+            WatchListItem(ticker='TSLA', weight=0.20),
+            WatchListItem(ticker='MSFT', weight=0.80),
+        ]
         gen = Generator(
-            watch_list=watchList, rate=60, start_time=datetime(2023, 5, 7, 9, 30, 0)
+            watch_list=watch_list,
+            msg_rate_p_sec=60,
+            start_time=datetime(2023, 5, 7, 9, 30, 0)
         )
 
         # WHEN
@@ -97,11 +100,16 @@ class TestGenerator(TestCase):
         # THEN
         assert_that(msg_time, equal_to(datetime(2023, 5, 7, 9, 30, 0)))
 
-    def test_pickTime_first_5_Messages(self):
+    def test_picLkTime_first_5_Messages(self):
         # GIVEN
-        watchList = [("TSLA", 1.00)]
+        watch_list = [
+            WatchListItem(ticker='TSLA', weight=0.20),
+            WatchListItem(ticker='MSFT', weight=0.80),
+        ]
         gen = Generator(
-            watch_list=watchList, rate=30, start_time=datetime(2023, 5, 7, 9, 30, 0)
+            watch_list=watch_list,
+            msg_rate_p_sec=2,
+            start_time=datetime(2023, 5, 7, 9, 30, 0)
         )
 
         # WHEN
@@ -112,18 +120,23 @@ class TestGenerator(TestCase):
         msg_time_5 = gen._pickTime()
 
         # THEN
-        assert_that(msg_time_1, equal_to(datetime(2023, 5, 7, 9, 30, 0)))
-        assert_that(msg_time_2, equal_to(datetime(2023, 5, 7, 9, 32, 0)))
-        assert_that(msg_time_3, equal_to(datetime(2023, 5, 7, 9, 34, 0)))
-        assert_that(msg_time_4, equal_to(datetime(2023, 5, 7, 9, 36, 0)))
-        assert_that(msg_time_5, equal_to(datetime(2023, 5, 7, 9, 38, 0)))
+        assert_that(msg_time_1, equal_to(datetime(2023, 5, 7, 9, 30, 0, 0)))
+        assert_that(msg_time_2, equal_to(datetime(2023, 5, 7, 9, 30, 0, 500_000)))
+        assert_that(msg_time_3, equal_to(datetime(2023, 5, 7, 9, 30, 1, 0)))
+        assert_that(msg_time_4, equal_to(datetime(2023, 5, 7, 9, 30, 1, 500_000)))
+        assert_that(msg_time_5, equal_to(datetime(2023, 5, 7, 9, 30, 2, 0)))
 
-    # 4 - Pick Message Type
+    # 4 - Pick Message Category
     def test_pickMsgType_empty_orderbook(self):
         # GIVEN
-        watchList = [("TSLA", 1.00)]
+        watch_list = [
+            WatchListItem(ticker='TSLA', weight=0.20),
+            WatchListItem(ticker='MSFT', weight=0.80),
+        ]
         gen = Generator(
-            watch_list=watchList, rate=30, start_time=datetime(2023, 5, 7, 9, 30, 0)
+            watch_list=watch_list,
+            msg_rate_p_sec=1,
+            start_time=datetime(2023, 5, 7, 9, 30, 0)
         )
         ticker='TSLA'
         side=Generator.Side.Buy
@@ -139,7 +152,7 @@ class TestGenerator(TestCase):
         watchList = [("TSLA", 1.00)]
         gen = Generator(
             watch_list=watchList,
-            rate=30,
+            msg_rate_p_sec=30,
             start_time=datetime(2023, 5, 7, 9, 30, 0),
             book_size_range = (1, 3)
         )
@@ -163,7 +176,7 @@ class TestGenerator(TestCase):
         watchList = [("TSLA", 1.00)]
         gen = Generator(
             watch_list=watchList,
-            rate=30,
+            msg_rate_p_sec=30,
             start_time=datetime(2023, 5, 7, 9, 30, 0),
             book_size_range = (1, 3),
             seed=100
@@ -188,7 +201,7 @@ class TestGenerator(TestCase):
         watchList = [("TSLA", 1.00)]
         gen = Generator(
             watch_list=watchList,
-            rate=30,
+            msg_rate_p_sec=30,
             start_time=datetime(2023, 5, 7, 9, 30, 0),
             book_size_range = (1, 3),
             price_range = (50, 55),
@@ -240,7 +253,7 @@ class TestGenerator(TestCase):
         watchList = [("TSLA", 1.00)]
         gen = Generator(
             watch_list=watchList,
-            rate=30,
+            msg_rate_p_sec=30,
             start_time=datetime(2023, 5, 7, 9, 30, 0),
             book_size_range = (1, 3),
             seed=100
@@ -253,12 +266,12 @@ class TestGenerator(TestCase):
                                     side=side,
                                     price=50.05,
                                     quantity=100,
-                                    orderId="ORID0001"),
+                                    order_id="ORID0001"),
                     Generator.Order(ticker=ticker,
                                     side=side,
                                     price=50.04,
                                     quantity=100,
-                                    orderId="ORID0002"),
+                                    order_id="ORID0002"),
                     ],
                 Generator.Side.Sell: []
         }
@@ -281,7 +294,7 @@ class TestGenerator(TestCase):
         watchList = [("TSLA", 1.00)]
         gen = Generator(
             watch_list=watchList,
-            rate=30,
+            msg_rate_p_sec=30,
             start_time=datetime(2023, 5, 7, 9, 30, 0),
             book_size_range = (1, 3),
             seed=100
@@ -313,7 +326,7 @@ class TestGenerator(TestCase):
         watchList = [("TSLA", 1.00)]
         gen = Generator(
             watch_list=watchList,
-            rate=30,
+            msg_rate_p_sec=30,
             start_time=datetime(2023, 5, 7, 9, 30, 0),
             book_size_range = (1, 2),
             seed=100
