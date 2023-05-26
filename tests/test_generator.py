@@ -267,7 +267,7 @@ class TestGenerator(TestCase):
         # THEN
         assert_that(next_order_id, equal_to("ORID0100"))
 
-    def test_get_NextMsg_addOrder(self):
+    def test_getNextMsg_addOrder(self):
         # GIVEN
         watch_list = [
             WatchListItem(ticker='TSLA',
