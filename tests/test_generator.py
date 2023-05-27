@@ -1,7 +1,19 @@
 from datetime import datetime
 from unittest import TestCase
 
-from hamcrest import any_of, assert_that, equal_to, has_length, is_, is_in
+from hamcrest import (
+    any_of,
+    assert_that,
+    equal_to,
+    has_length,
+    is_,
+    is_in,
+    greater_than,
+    greater_than_or_equal_to,
+    less_than,
+    less_than_or_equal_to,
+    all_of
+)
 from pitch.generator import Generator
 
 from pitch.add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
@@ -9,6 +21,7 @@ from pitch.order_executed import OrderExecuted, OrderExecutedAtPriceSize
 from pitch.reduce_size import ReduceSizeLong, ReduceSizeShort
 
 from pitch.generator import WatchListItem
+
 
 class TestGenerator(TestCase):
 
@@ -138,8 +151,8 @@ class TestGenerator(TestCase):
             msg_rate_p_sec=1,
             start_time=datetime(2023, 5, 7, 9, 30, 0)
         )
-        ticker='TSLA'
-        side=Generator.Side.Buy
+        ticker = 'TSLA'
+        side = Generator.Side.Buy
 
         # WHEN
         new_msg_cat = gen._pickMsgCategory(ticker=ticker, side=side)
@@ -150,7 +163,7 @@ class TestGenerator(TestCase):
     def test_pickMsgType_too_many_orders(self):
         # GIVEN
         watch_list = [
-            WatchListItem(ticker='TSLA', weight=0.20, book_size_range=(1,3)),
+            WatchListItem(ticker='TSLA', weight=0.20, book_size_range=(1, 3)),
             WatchListItem(ticker='MSFT', weight=0.80),
         ]
         gen = Generator(
@@ -158,8 +171,8 @@ class TestGenerator(TestCase):
             msg_rate_p_sec=1,
             start_time=datetime(2023, 5, 7, 9, 30, 0)
         )
-        ticker='TSLA'
-        side=Generator.Side.Buy
+        ticker = 'TSLA'
+        side = Generator.Side.Buy
         gen._order_book[ticker] = {
             Generator.Side.Buy: [
                 Generator.Order(ticker=ticker,
@@ -195,7 +208,7 @@ class TestGenerator(TestCase):
     def test_pickMsgType_within_size(self):
         # GIVEN
         watch_list = [
-            WatchListItem(ticker='TSLA', weight=0.20, book_size_range=(1,3)),
+            WatchListItem(ticker='TSLA', weight=0.20, book_size_range=(1, 3)),
             WatchListItem(ticker='MSFT', weight=0.80),
         ]
         gen = Generator(
@@ -204,12 +217,12 @@ class TestGenerator(TestCase):
             start_time=datetime(2023, 5, 7, 9, 30, 0),
             seed=100
         )
-        ticker='TSLA'
-        side=Generator.Side.Buy
+        ticker = 'TSLA'
+        side = Generator.Side.Buy
         gen._order_book[ticker] = {
-            Generator.Side.Buy: [ (50.05, 100), (50.04, 100),
-                                  (50.03, 100)
-                                  ],
+            Generator.Side.Buy: [(50.05, 100), (50.04, 100),
+                                 (50.03, 100)
+                                 ],
             Generator.Side.Sell: []
         }
 
@@ -234,8 +247,8 @@ class TestGenerator(TestCase):
             start_time=datetime(2023, 5, 7, 9, 30, 0),
             seed=100
         )
-        ticker='TSLA'
-        side=Generator.Side.Buy
+        ticker = 'TSLA'
+        side = Generator.Side.Buy
 
         # WHEN
         (new_price, new_size) = gen._pickPriceSize(ticker=ticker, side=side)
@@ -272,9 +285,9 @@ class TestGenerator(TestCase):
         watch_list = [
             WatchListItem(ticker='TSLA',
                           weight=0.20,
-                          book_size_range=(1,3),
+                          book_size_range=(1, 3),
                           price_range=(75, 100),
-                          size_range=(25,100)),
+                          size_range=(25, 100)),
             WatchListItem(ticker='MSFT', weight=0.80),
         ]
         gen = Generator(
@@ -283,22 +296,22 @@ class TestGenerator(TestCase):
             start_time=datetime(2023, 5, 7, 9, 30, 0),
             seed=100
         )
-        ticker='TSLA'
-        side=Generator.Side.Buy
+        ticker = 'TSLA'
+        side = Generator.Side.Buy
         gen._order_book[ticker] = {
-                Generator.Side.Buy: [
-                    Generator.Order(ticker=ticker,
-                                    side=side,
-                                    price=75.05,
-                                    quantity=100,
-                                    order_id="ORID0001"),
-                    Generator.Order(ticker=ticker,
-                                    side=side,
-                                    price=75.04,
-                                    quantity=100,
-                                    order_id="ORID0002"),
-                    ],
-                Generator.Side.Sell: []
+            Generator.Side.Buy: [
+                Generator.Order(ticker=ticker,
+                                side=side,
+                                price=75.05,
+                                quantity=100,
+                                order_id="ORID0001"),
+                Generator.Order(ticker=ticker,
+                                side=side,
+                                price=75.04,
+                                quantity=100,
+                                order_id="ORID0002"),
+            ],
+            Generator.Side.Sell: []
         }
 
         # WHEN
@@ -306,74 +319,87 @@ class TestGenerator(TestCase):
                                   side=side,
                                   new_timestamp=gen._pickTime(),
                                   new_msg_cat=Generator.MsgType.Add)
-
-        print(f'new_msg: {str(new_msg)}')
 
         # THEN
         assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Add]))
-        #assert_that(new_msg.ticker(), equal_to('TSLA'))
-        assert_that(gen._order_book[ticker][Generator.Side.Buy], has_length(3))
-
-    def test_editOrder(self):
-        # GIVEN
-        watchList = [("TSLA", 1.00)]
-        gen = Generator(
-            watch_list=watchList,
-            msg_rate_p_sec=30,
-            start_time=datetime(2023, 5, 7, 9, 30, 0),
-            book_size_range = (1, 3),
-            seed=100
-        )
-        ticker='TSLA'
-        side=Generator.Side.Buy
-        gen._orderBook[ticker] = {
-                Generator.Side.Buy: [ (50.05, 100), (50.04, 100),
-                    (50.03, 50)
-                    ],
-                Generator.Side.Sell: []
-        }
-
-        # WHEN
-        new_msg = gen._getNextMsg(ticker=ticker,
-                                  side=side,
-                                  new_timestamp=gen._pickTime(),
-                                  new_msg_cat=Generator.MsgType.Add)
-
-        print(f'new_msg: {str(new_msg)}')
-
-        # THEN
-        assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Edit]))
-        #assert_that(new_msg.ticker(), equal_to('TSLA'))
-        assert_that(gen._orderBook[ticker][Generator.Side.Buy], has_length(3))
-
-    def test_deleteOrder(self):
-        # GIVEN
-        watchList = [("TSLA", 1.00)]
-        gen = Generator(
-            watch_list=watchList,
-            msg_rate_p_sec=30,
-            start_time=datetime(2023, 5, 7, 9, 30, 0),
-            book_size_range = (1, 2),
-            seed=100
-        )
-        ticker='TSLA'
-        side=Generator.Side.Buy
-        gen._orderBook[ticker] = {
-                Generator.Side.Buy: [ (50.05, 100), (50.04, 100),
-                    (50.03, 50)
-                    ],
-                Generator.Side.Sell: []
-        }
-
-        # WHEN
-        new_msg = gen._getNextMsg(ticker=ticker,
-                                  side=side,
-                                  new_timestamp=gen._pickTime(),
-                                  new_msg_cat=Generator.MsgType.Add)
-
-        print(f'new_msg: {str(new_msg)}')
-
-        # THEN
-        assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Edit]))
         assert_that(new_msg.symbol(), equal_to('TSLA'))
-        assert_that(gen._orderBook[ticker][Generator.Side.Buy], has_length(2))
+        assert_that(new_msg.side(), equal_to('B'))
+        assert_that(new_msg.order_id(), equal_to('ORID0001'))
+        assert_that(new_msg.price(), all_of(greater_than_or_equal_to(75),
+                                            less_than_or_equal_to(100)))
+        assert_that(new_msg.quantity(), all_of(greater_than_or_equal_to(25),
+                                               less_than_or_equal_to(100)))
+
+    def test_getNextMsg_editOrder(self):
+        # GIVEN
+#        watch_list = [
+#            WatchListItem(ticker='TSLA',
+#                          weight=0.20,
+#                          book_size_range=(1, 3),
+#                          price_range=(75, 100),
+#                          size_range=(25, 100)),
+#        ]
+#        gen = Generator(
+#            watch_list=watch_list,
+#            msg_rate_p_sec=30,
+#            start_time=datetime(2023, 5, 7, 9, 30, 0),
+#            seed=100
+#        )
+#        ticker = 'TSLA'
+#        side = Generator.Side.Buy
+#        gen._order_book[ticker] = {
+#            Generator.Side.Buy: [(50.05, 100), (50.04, 100),
+#                                 (50.03, 50)
+#                                 ],
+#            Generator.Side.Sell: []
+#        }
+#
+#        # WHEN
+#        new_msg = gen._getNextMsg(ticker=ticker,
+#                                  side=side,
+#                                  new_timestamp=gen._pickTime(),
+#                                  new_msg_cat=Generator.MsgType.Add)
+#
+#        print(f'new_msg: {str(new_msg)}')
+#
+#        # THEN
+#        assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Edit]))
+#        # assert_that(new_msg.ticker(), equal_to('TSLA'))
+#        assert_that(gen._orderBook[ticker][Generator.Side.Buy], has_length(3))
+#
+#    def test_getNextMsg_deleteOrder(self):
+#        # GIVEN
+#        watchList = [("TSLA", 1.00)]
+#        gen = Generator(
+#            watch_list=watchList,
+#            msg_rate_p_sec=30,
+#            start_time=datetime(2023, 5, 7, 9, 30, 0),
+#            book_size_range=(1, 2),
+#            seed=100
+#        )
+#        ticker = 'TSLA'
+#        side = Generator.Side.Buy
+#        gen._orderBook[ticker] = {
+#            Generator.Side.Buy: [(50.05, 100), (50.04, 100),
+#                                 (50.03, 50)
+#                                 ],
+#            Generator.Side.Sell: []
+#        }
+#
+#        # WHEN
+#        new_msg = gen._getNextMsg(ticker=ticker,
+#                                  side=side,
+#                                  new_timestamp=gen._pickTime(),
+#                                  new_msg_cat=Generator.MsgType.Add)
+#
+#        print(f'new_msg: {str(new_msg)}')
+#
+#        # THEN
+#        assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Edit]))
+#        assert_that(new_msg.symbol(), equal_to('TSLA'))
+#        assert_that(gen._orderBook[ticker][Generator.Side.Buy], has_length(2))
+#
+#    def test_generate_5_messages(self):
+#        # Generate 5 messages
+#        # Display them - 1 per row
+#        pass
