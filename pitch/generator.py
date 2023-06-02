@@ -75,6 +75,9 @@ class Generator(object):
             self._quantity = quantity
             self._orderId = order_id
 
+        def __str__(self):
+            return f'{self._ticker}, [{self._orderId}] {self._price} X {self._quantity}'
+
     def __init__(
             self,
             watch_list: List[WatchListItem],
@@ -158,6 +161,9 @@ class Generator(object):
         # Set 1st Order Id
         self._nextOrderNum = 0
 
+        # Size increment
+        self._increment = 25
+
         # Message Types
         self._msgTypes = {
             Generator.MsgType.Add: {
@@ -166,18 +172,18 @@ class Generator(object):
                 AddOrderExpanded
             },
             Generator.MsgType.Edit: {
-                ModifyOrderShort,
                 ModifyOrderLong,
+                ModifyOrderShort,
                 OrderExecutedAtPriceSize,
+                ReduceSizeLong,
                 ReduceSizeShort,
-                ReduceSizeLong
             },
             Generator.MsgType.Remove: {
                 DeleteOrder,
                 OrderExecuted,
                 OrderExecutedAtPriceSize,
-                TradeShort,
                 TradeLong,
+                TradeShort,
                 TradeExpanded
             }
         }
@@ -284,19 +290,24 @@ class Generator(object):
             else:
                 raise Exception('Error picking a random Message Category')
 
+    def _pickNewPrice(self, price_range: Tuple[float, float]) -> float:
+        pass
+
+    def _pickNewSize(self, size_range: Tuple[int, int]) -> int:
+        pass
+
     def _pickPriceSize(self, ticker, side) -> Tuple[float, int]:
         price_range = self._watch_list[ticker][side].price_range
         new_price = price_range[0] + (self._rng.random() *
                                       (price_range[1] - price_range[0]))
 
         size_range = self._watch_list[ticker][side].size_range
-        increment = 25
         r_1 = self._rng.random()
-        r_2 = (size_range[1] - size_range[0]) // increment
+        r_2 = (size_range[1] - size_range[0]) // self._increment
         r_idx = self._rng.integers(low=0, high=r_2 + 1)
 
         new_price = np.around(new_price, decimals=2)
-        new_size = size_range[0] + (r_idx * increment)
+        new_size = size_range[0] + (r_idx * self._increment)
 
         return new_price, new_size
 
@@ -321,9 +332,12 @@ class Generator(object):
         elif msg_cat == Generator.MsgType.Remove:
             pass
 
+    def _pickRandomMessageFromCategory(self, msg_cat):
+        return self._pickRandom(list(self._msgTypes[msg_cat]))
+
     def _getNextMsg(self, ticker: str, side: Side, new_timestamp, new_msg_cat):
         new_side = 'B' if side == Generator.Side.Buy else 'S'
-        new_msg_type = self._pickRandom(list(self._msgTypes[new_msg_cat]))
+        new_msg_type = self._pickRandomMessageFromCategory(msg_cat=new_msg_cat)
         new_order_id = self._getNextOrderId()
 
         if new_msg_cat == Generator.MsgType.Add:
@@ -342,6 +356,7 @@ class Generator(object):
                     symbol=ticker,
                     price=new_price,
                 )
+                return message
             elif new_msg_type == AddOrderShort:
                 message = AddOrderShort.from_parms(
                     time_offset=new_timestamp,
@@ -366,8 +381,42 @@ class Generator(object):
             return message
         elif new_msg_cat == Generator.MsgType.Edit:
             print(f'Modifying an existing order via {new_msg_cat}')
-            if new_msg_type == AddOrderLong:
+
+            # pick an existing order
+            if new_msg_type == ModifyOrderLong:
+                # New price can be anything
+                # New size can be anything
+                new_price = self._pickNewPrice(price_range=self._watch_list[ticker][side].price_range)
+                new_size = self._pickNewSize(size_range=self._watch_list[ticker][side].size_range)
                 pass
+            elif new_msg_type == ModifyOrderShort:
+                # New price can be anything
+                # New size can be anything
+                new_price = self._pickNewPrice(price_range=self._watch_list[ticker][side].price_range)
+                new_size = self._pickNewSize(size_range=self._watch_list[ticker][side].size_range)
+                pass
+            elif new_msg_type == OrderExecutedAtPriceSize:
+                # Pick an existing order
+                existing_order = None
+                for order in self._order_book[ticker][side]:
+                    if order.quantity() > self._increment:
+                        pass
+                    pass
+                # New size will always be smaller
+                new_size_range = (self._watch_list[ticker][side].size_range[0],
+                                  0)
+                new_size = self._pickNewSize(size_range=new_size_range)
+                pass
+            elif new_msg_type == ReduceSizeLong:
+                # Price stays the same
+                # New size will always be smaller
+                pass
+            elif new_msg_type == ReduceSizeShort:
+                # Price stays the same
+                # New size will always be smaller
+                pass
+            else:
+                raise Exception(f'Unknown Edit Message Type {new_msg_type}')
         elif new_msg_cat == Generator.MsgType.Remove:
             print(f'Removing an existing order via {new_msg_cat}')
             if new_msg_type == DeleteOrder:
@@ -407,5 +456,9 @@ class Generator(object):
         # 7 - Return new order
         return next_msg
 
-    def print_OrderBook(self):
-        ...
+    def print_OrderBook(self, ticker: str):
+        print(f'Dumping OrderBook for {ticker}')
+        ob = self._order_book[ticker]
+        buy_side = ob[Generator.Side.Buy]
+        for buy in buy_side:
+            print(f'buy: {buy}')
