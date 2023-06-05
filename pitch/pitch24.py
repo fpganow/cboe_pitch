@@ -263,8 +263,8 @@ class MessageBase(object):
                 msg_str += f'{self.order_id()}, '
             elif field_spec[0] == FieldName.Quantity:
                 msg_str += f'{self.quantity()}, '
-            else:
-                print(f'key: {field_spec[0]}')
+#            else:
+#                print(f'key: {field_spec[0]}')
         msg_str = msg_str[:-2]
         msg_str += ")"
         return msg_str

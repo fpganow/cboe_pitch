@@ -155,8 +155,8 @@ class Generator(object):
         self._order_book = {}
         for ticker, watch_list_item in self._watch_list.items():
             self._order_book[ticker] = {
-                Generator.Side.Buy: watch_list_item,
-                Generator.Side.Sell: watch_list_item
+                Generator.Side.Buy: [],
+                Generator.Side.Sell: [] 
             }
 
         # Set 1st Order Id
@@ -273,26 +273,26 @@ class Generator(object):
         if len(self._order_book[ticker][side]) \
                 < self._watch_list[ticker][side].book_size_range[0]:
             # We want an Add
-            print(f'MsgType.Add')
+            #print(f'MsgType.Add')
             return Generator.MsgType.Add
         # Is book too big?
         elif len(self._order_book[ticker][side]) \
                 > self._watch_list[ticker][side].book_size_range[1]:
             # We want a Delete
-            print(f'MsgType.Delete')
+            #print(f'MsgType.Delete')
             return Generator.MsgType.Remove
         else:
             # Else - randomly choose
-            print(f'MsgType.Random')
+            #print(f'MsgType.Random')
             rnd_num = self._rng.integers(low=1, high=3)
             if rnd_num == 1:
-                print(f'Generator.MsgType.Add')
+                #print(f'Generator.MsgType.Add')
                 return Generator.MsgType.Add
             elif rnd_num == 2:
-                print(f'Generator.MsgType.Edit')
+                #print(f'Generator.MsgType.Edit')
                 return Generator.MsgType.Edit
             elif rnd_num == 3:
-                print(f'Generator.MsgType.Remove')
+                #print(f'Generator.MsgType.Remove')
                 return Generator.MsgType.Remove
             else:
                 raise Exception('Error picking a random Message Category')
@@ -382,7 +382,6 @@ class Generator(object):
                     symbol=ticker,
                     price=new_price,
                 )
-                return message
             elif new_msg_type == AddOrderShort:
                 message = AddOrderShort.from_parms(
                     time_offset=new_timestamp,
@@ -533,14 +532,26 @@ class Generator(object):
                                     side=side,
                                     new_timestamp=new_timestamp,
                                     new_msg_cat=new_msg_cat)
-        #        self._updateOrderBook(new_msg_cat, next_msg)
-
         # 6 - Return new order
         return next_msg
 
+    # TODO: Add function to sort OrderBook
+    # TODO: Call before dumping
     def print_OrderBook(self, ticker: str):
         print(f'Dumping OrderBook for {ticker}')
         ob = self._order_book[ticker]
+
+        display_width = 60
+
+        print("\t+" + '-'*display_width + "+")
         buy_side = ob[Generator.Side.Buy]
         for buy in buy_side:
-            print(f'\tbuy: {buy}')
+            line_len = len(str(buy))
+            print(f'\t| buy: {buy} |')
+
+        print("\t+" + '-'*display_width + "+")
+        sell_side = ob[Generator.Side.Sell]
+        for sell in sell_side:
+            line_len = len(str(sell))
+            print(f'\t| sell: {sell} |')
+        print("\t+" + '-'*display_width + "+")
