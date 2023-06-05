@@ -37,6 +37,11 @@ class ReduceSizeBase(MessageBase):
         self.order_id(order_id)
         self._field_specs[FieldName.CanceledQuantity].value(canceled_quantity)
 
+    def canceled_quantity(self, canceled_quantity: int = None) -> int:
+        if canceled_quantity is not None:
+            self._field_specs[FieldName.CanceledQuantity].value(canceled_quantity)
+        return self._field_specs[FieldName.CanceledQuantity].value()
+
 
 class ReduceSizeLong(ReduceSizeBase):
     _messageType = 0x25

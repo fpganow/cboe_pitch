@@ -14,7 +14,7 @@ from hamcrest import (
     greater_than_or_equal_to,
     less_than,
     less_than_or_equal_to,
-    all_of, instance_of
+    all_of, instance_of, not_
 )
 
 from pitch import ModifyOrderLong
@@ -303,15 +303,16 @@ class TestGenerator(TestCase):
             start_time=datetime(2023, 5, 7, 9, 30, 0),
             seed=100
         )
-        ticker = 'TSLA'
-        side = Generator.Side.Buy
+        price_range = (50, 150)
+        size_range = (25, 300)
 
         # WHEN
-        (new_price, new_size) = gen._pickPriceSize(ticker=ticker, side=side)
+        new_price = gen._pickNewPrice(price_range=price_range, old_price=100.00)
+        new_size = gen._pickNewSize(size_range=size_range, old_size=50)
 
         # THEN
-        assert_that(new_price, equal_to(54.17))
-        assert_that(new_size, equal_to(25))
+        assert_that(new_price, not_(equal_to(100.00)))
+        assert_that(new_size, not_(equal_to(50)))
 
     def test_next_order_id(self):
         # GIVEN
@@ -425,10 +426,15 @@ class TestGenerator(TestCase):
                         seed=9900
                         )
         selected_order = gen._order_book[ticker][side][0]
-        print(f'selected_order: {selected_order}')
         pick_rand_ord.return_value = selected_order
+        old_price = selected_order._price
+        old_size = selected_order._quantity
 
         # WHEN
+        print('\n-- Edit Order Test --')
+        print(f'selected_order: ({selected_order})')
+        #print('-- Order Book Before --')
+        #gen.print_OrderBook(ticker=ticker)
         # Mock out call to pick a random message type based on the passed
         # in category
         new_msg = gen._getNextMsg(ticker=ticker,
@@ -436,15 +442,125 @@ class TestGenerator(TestCase):
                                   new_timestamp=gen._pickTime(),
                                   new_msg_cat=Generator.MsgType.Edit)
 
-        print(f'new_msg: {new_msg}')
+        #print(f'Modify Message: {new_msg}')
         # THEN
         assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Edit]))
-        assert_that(new_msg, instance_of(AddOrderShort))
+        assert_that(new_msg, instance_of(ModifyOrderLong))
 
-        assert_that(new_msg.symbol(), equal_to('MSFT'))
-        assert_that(new_msg.side(), equal_to('B'))
+        print(f'new_msg.order_id(): {new_msg.order_id()}')
+        print(f'selected_order._order_id: {selected_order._order_id}')
         assert_that(new_msg.order_id(), equal_to(selected_order._order_id))
+        # Make sure new price is in the appropriate range
         assert_that(new_msg.price(), all_of(greater_than_or_equal_to(price_range[0]),
                                             less_than_or_equal_to(price_range[1])))
+        # Make sure that the price has changed
+        print(f'old_price: {old_price}')
+        print(f'new_msg.price(): {new_msg.price()}')
+        assert_that(new_msg.price(), not(equal_to(old_price)))
+        # Make sure new size is in the appropriate range
         assert_that(new_msg.quantity(), all_of(greater_than_or_equal_to(size_range[0]),
                                                less_than_or_equal_to(size_range[1])))
+        # Make sure that the size/quantity has changed
+        print(f'old_size: {old_size}')
+        print(f'new_msg.quantity(): {new_msg.quantity()}')
+        assert_that(new_msg.quantity(), not(equal_to(old_size)))
+
+    @patch("pitch.generator.Generator._pickRandomOrder")
+    @patch("pitch.generator.Generator._pickRandomMessageFromCategory")
+    def test_getNextMsg_Edit_OrderExecutedAtPriceSize(self, pick_rand_msg, pick_rand_ord):
+        # GIVEN
+        pick_rand_msg.return_value = OrderExecutedAtPriceSize
+        ticker = 'MSFT'
+        side = Generator.Side.Buy
+        price_range = (50, 100)
+        size_range = (50, 100)
+        gen = setupTest(ticker=ticker,
+                        side=side,
+                        book_size_range=(1, 3),
+                        price_range=price_range,
+                        size_range=size_range,
+                        num_orders=4,
+                        seed=9900
+                        )
+        selected_order = gen._order_book[ticker][side][0]
+        pick_rand_ord.return_value = selected_order
+        old_price = selected_order._price
+        old_size = selected_order._quantity
+
+        # WHEN
+        print('\n-- Edit Order Test --')
+        print(f'selected_order: ({selected_order})')
+        #print('-- Order Book Before --')
+        #gen.print_OrderBook(ticker=ticker)
+        # Mock out call to pick a random message type based on the passed
+        # in category
+        new_msg = gen._getNextMsg(ticker=ticker,
+                                  side=side,
+                                  new_timestamp=gen._pickTime(),
+                                  new_msg_cat=Generator.MsgType.Edit)
+
+        #print(f'Modify Message: {new_msg}')
+        # THEN
+        assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Edit]))
+        assert_that(new_msg, instance_of(OrderExecutedAtPriceSize))
+
+        print(f'new_msg.order_id(): {new_msg.order_id()}')
+        print(f'selected_order._order_id: {selected_order._order_id}')
+        assert_that(new_msg.order_id(), equal_to(selected_order._order_id))
+        # Make sure new price is in the appropriate range
+        assert_that(new_msg.price(), all_of(greater_than_or_equal_to(price_range[0]),
+                                            less_than_or_equal_to(price_range[1])))
+        # Make sure that the price has not changed
+        assert_that(new_msg.price(), equal_to(old_price))
+        print(f'new_msg.executed_quantity(): {new_msg.executed_quantity()}')
+        print(f'new_msg.remaining_quantity(): {new_msg.remaining_quantity()}')
+        print(f'selected_order._quantity: {selected_order._quantity}')
+        assert_that(new_msg.executed_quantity() + new_msg.remaining_quantity(), equal_to(selected_order._quantity))
+
+    @patch("pitch.generator.Generator._pickRandomOrder")
+    @patch("pitch.generator.Generator._pickRandomMessageFromCategory")
+    def test_getNextMsg_Edit_ReduceSizeLong(self, pick_rand_msg, pick_rand_ord):
+        # GIVEN
+        pick_rand_msg.return_value = ReduceSizeLong
+        ticker = 'MSFT'
+        side = Generator.Side.Buy
+        price_range = (50, 100)
+        size_range = (50, 100)
+        gen = setupTest(ticker=ticker,
+                        side=side,
+                        book_size_range=(1, 3),
+                        price_range=price_range,
+                        size_range=size_range,
+                        num_orders=4,
+                        seed=9900
+                        )
+        selected_order = gen._order_book[ticker][side][0]
+        pick_rand_ord.return_value = selected_order
+        old_price = selected_order._price
+        old_size = selected_order._quantity
+
+        # WHEN
+        print('\n-- Edit Order Test --')
+        print(f'selected_order: ({selected_order})')
+        # print('-- Order Book Before --')
+        # gen.print_OrderBook(ticker=ticker)
+        # Mock out call to pick a random message type based on the passed
+        # in category
+        new_msg = gen._getNextMsg(ticker=ticker,
+                                  side=side,
+                                  new_timestamp=gen._pickTime(),
+                                  new_msg_cat=Generator.MsgType.Edit)
+
+        # print(f'Modify Message: {new_msg}')
+        # THEN
+        assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Edit]))
+        assert_that(new_msg, instance_of(ReduceSizeLong))
+
+        # Check returned Order is correct
+        print(f'new_msg.order_id(): {new_msg.order_id()}')
+        print(f'selected_order._order_id: {selected_order._order_id}')
+        assert_that(new_msg.order_id(), equal_to(selected_order._order_id))
+        print(f'selected_order._quantity: {selected_order._quantity}')
+        assert_that(new_msg.canceled_quantity(), equal_to(selected_order._quantity))
+
+        # Check OrderBook reflects changes

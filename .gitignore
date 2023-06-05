@@ -5,3 +5,4 @@ build
 dist
 *.egg-info
 Session.vim
+vent_wsl
