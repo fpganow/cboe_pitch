@@ -262,7 +262,6 @@ class Generator(object):
 
     def _pickRandomOrder(self, ticker: str, side: Side) -> Order:
         return self._pickRandom(self._orderbook.get_orders(ticker=ticker, side=side))
-        #return self._pickRandom(self._order_book[ticker][side])
 
     def _pickRandom(self, in_list) -> Any:
         list_len = len(in_list)
@@ -349,23 +348,6 @@ class Generator(object):
         self._nextExecutionId += 1
         return f'EXID{self._nextExecutionId:04d}'
 
-    #    def _updateOrderBook(self, msg_cat, next_msg):
-    #        ticker = next_msg.symbol()
-    #        side = Generator.Side.Buy if next_msg.side() == 'B' else Generator.Side.Sell
-    #        print(f'Adding order: {ticker}-{side}')
-    #        if msg_cat == Generator.MsgType.Add:
-    #            self._orderBook[ticker][side].append(
-    #                Generator.Order(ticker=ticker,
-    #                                side=side,
-    #                                price=next_msg.price(),
-    #                                quantity=next_msg.quantity(),
-    #                                order_id=next_msg.orderId()),
-    #            )
-    #        elif msg_cat == Generator.MsgType.Edit:
-    #            pass
-    #        elif msg_cat == Generator.MsgType.Remove:
-    #            pass
-
     def _pickRandomMessageFromCategory(self, msg_cat):
         return self._pickRandom(list(self._msgTypes[msg_cat]))
 
@@ -387,7 +369,7 @@ class Generator(object):
                     order_id=new_order_id,
                     side=new_side,
                     quantity=new_size,
-                    symbol=ticker,
+                    ymbol=ticker,
                     price=new_price,
                 )
             elif new_msg_type == AddOrderShort:
@@ -417,13 +399,6 @@ class Generator(object):
                                       price=message.price(),
                                       quantity=message.quantity(),
                                       order_id=message.order_id())
-#            self._order_book[ticker][side].append(
-#                Generator.Order(ticker=ticker,
-#                                side=side,
-#                                price=message.price(),
-#                                quantity=message.quantity(),
-#                                order_id=message.order_id()),
-#            )
             return message
         elif new_msg_cat == Generator.MsgType.Edit:
             # Pick an existing order
@@ -455,7 +430,7 @@ class Generator(object):
 
                 print('-' * 50)
                 print('-- Order Book After --')
-                self._orderbook.print_OrderBook(ticker=ticker)
+                self._orderbook.print_order_book(ticker=ticker)
                 if new_msg_type == ModifyOrderLong:
                     return ModifyOrderLong.from_parms(time_offset=1,
                                                       price=new_price,
@@ -501,18 +476,24 @@ class Generator(object):
                 print(f'New Size range: {new_size_range}')
                 new_size = self._pickNewSize(size_range=new_size_range, old_size=old_size)
                 print(f'New size: {new_size}')
+                canceled_quantity = old_size - new_size
+                random_order._quantity = old_size - canceled_quantity
+
                 if new_msg_type == ReduceSizeLong:
                     # TODO: Add a _getNextTimeOffset() function
                     return ReduceSizeLong.from_parms(time_offset=1,
                                                      order_id=random_order._order_id,
-                                                     canceled_quantity=old_size - new_size)
+                                                     canceled_quantity=canceled_quantity)
                 else:
                     return ReduceSizeShort.from_parms(time_offset=1,
                                                       order_id=random_order._order_id,
-                                                      canceled_quantity=old_size - new_size)
+                                                      canceled_quantity=canceled_quantity)
             else:
                 raise Exception(f'Unknown Edit Message Type {new_msg_type}')
         elif new_msg_cat == Generator.MsgType.Remove:
+            # Pick an existing order
+            random_order = self._pickRandomOrder(ticker=ticker, side=side)
+
             print(f'Removing an existing order via {new_msg_cat}')
             if new_msg_type == DeleteOrder:
                 pass

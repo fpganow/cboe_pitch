@@ -21,6 +21,7 @@ from pitch import ModifyOrderLong
 from pitch.generator import Generator
 
 from pitch.add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
+from pitch.delete_order import DeleteOrder
 from pitch.order_executed import OrderExecuted, OrderExecutedAtPriceSize
 from pitch.orderbook import Side
 from pitch.reduce_size import ReduceSizeLong, ReduceSizeShort
@@ -58,10 +59,7 @@ def setupTest(ticker: str,
         start_time=datetime(2023, 5, 7, 9, 30, 0),
         seed=seed
     )
-    gen._order_book[ticker] = {
-        Side.Buy: [],
-        Side.Sell: []
-    }
+    gen._orderbook.add_ticker(ticker=ticker)
     if num_orders != 0:
         start_price = price_range[1] if side == Side.Buy else price_range[0]
         price_interval = (price_range[1] - price_range[0]) / (num_orders * 2)
@@ -72,11 +70,11 @@ def setupTest(ticker: str,
         for i in range(num_orders):
             start_price += price_interval
             # print(f'start_price: {start_price}')
-            gen._order_book[ticker][side].append(Generator.Order(ticker=ticker,
-                                                                 side=side,
-                                                                 price=start_price,
-                                                                 quantity=100,
-                                                                 order_id=gen._getNextOrderId()))
+            gen._orderbook.add_order(ticker=ticker,
+                                     side=side,
+                                     price=start_price,
+                                     quantity=100,
+                                     order_id=gen._getNextOrderId())
     return gen
 
 
@@ -426,7 +424,7 @@ class TestGenerator(TestCase):
                         num_orders=4,
                         seed=9900
                         )
-        selected_order = gen._order_book[ticker][side][0]
+        selected_order = gen._orderbook.get_orders(ticker=ticker, side=side)[0]
         pick_rand_ord.return_value = selected_order
         old_price = selected_order._price
         old_size = selected_order._quantity
@@ -483,7 +481,7 @@ class TestGenerator(TestCase):
                         num_orders=4,
                         seed=9900
                         )
-        selected_order = gen._order_book[ticker][side][0]
+        selected_order = gen._orderbook.get_orders(ticker=ticker, side=side)[0]
         pick_rand_ord.return_value = selected_order
         old_price = selected_order._price
         old_size = selected_order._quantity
@@ -491,8 +489,6 @@ class TestGenerator(TestCase):
         # WHEN
         print('\n-- Edit Order Test --')
         print(f'selected_order: ({selected_order})')
-        #print('-- Order Book Before --')
-        #gen.print_OrderBook(ticker=ticker)
         # Mock out call to pick a random message type based on the passed
         # in category
         new_msg = gen._getNextMsg(ticker=ticker,
@@ -523,10 +519,10 @@ class TestGenerator(TestCase):
     def test_getNextMsg_Edit_ReduceSizeLong(self, pick_rand_msg, pick_rand_ord):
         # GIVEN
         pick_rand_msg.return_value = ReduceSizeLong
-        ticker = 'MSFT'
+        ticker = 'NVDA'
         side = Side.Buy
         price_range = (50, 100)
-        size_range = (50, 100)
+        size_range = (25, 100)
         gen = setupTest(ticker=ticker,
                         side=side,
                         book_size_range=(1, 3),
@@ -535,7 +531,7 @@ class TestGenerator(TestCase):
                         num_orders=4,
                         seed=9900
                         )
-        selected_order = gen._order_book[ticker][side][0]
+        selected_order = gen._orderbook.get_orders(ticker=ticker, side=side)[0]
         pick_rand_ord.return_value = selected_order
         old_price = selected_order._price
         old_size = selected_order._quantity
@@ -557,13 +553,44 @@ class TestGenerator(TestCase):
         assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Edit]))
         assert_that(new_msg, instance_of(ReduceSizeLong))
 
+        print('-- Order Book Before --')
+        gen._orderbook.print_order_book(ticker=ticker)
         # Check returned Order is correct
         print(f'new_msg.order_id(): {new_msg.order_id()}')
         print(f'selected_order._order_id: {selected_order._order_id}')
         assert_that(new_msg.order_id(), equal_to(selected_order._order_id))
         print(f'selected_order._quantity: {selected_order._quantity}')
         # 50 = 100 - <new size>
-        assert_that(new_msg.canceled_quantity(), equal_to(selected_order._quantity))
+        assert_that(new_msg.canceled_quantity(), equal_to(old_size - selected_order._quantity))
 
-        # Need OrderBook Helper Functions
-        # Check OrderBook reflects changes
+    @patch("pitch.generator.Generator._pickRandomOrder")
+    @patch("pitch.generator.Generator._pickRandomMessageFromCategory")
+    def test_getNextMsg_Delete_DeleteOrder(self, pick_rand_msg, pick_rand_ord):
+        # GIVEN
+        pick_rand_msg.return_value = DeleteOrder
+        ticker = 'NVDA'
+        side = Side.Buy
+        price_range = (50, 100)
+        size_range = (25, 100)
+        gen = setupTest(ticker=ticker,
+                        side=side,
+                        book_size_range=(1, 3),
+                        price_range=price_range,
+                        size_range=size_range,
+                        num_orders=4,
+                        seed=9900
+                        )
+        selected_order = gen._orderbook.get_orders(ticker=ticker, side=side)[0]
+        pick_rand_ord.return_value = selected_order
+
+        # WHEN
+        print(f'Order selected to be deleted: ({selected_order})')
+        new_msg = gen._getNextMsg(ticker=ticker,
+                                  side=side,
+                                  new_timestamp=gen._pickTime(),
+                                  new_msg_cat=Generator.MsgType.Delete)
+
+        # THEN
+        assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Delete]))
+        assert_that(new_msg, instance_of(DeleteOrder))
+        assert_that(new_msg.order_id(), equal_to(selected_order._order_id))

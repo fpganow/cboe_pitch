@@ -100,21 +100,22 @@ class OrderBook:
         # Return Orders
         return self._orderbook[ticker][side]
 
-    def print_OrderBook(self, ticker: str):
+    def print_order_book(self, ticker: str):
         print(f'Dumping OrderBook for {ticker}')
-        ob = self._order_book[ticker]
 
         display_width = 60
 
         print("\t+" + '-'*display_width + "+")
-        buy_side = ob[Generator.Side.Buy]
-        for buy in buy_side:
-            line_len = len(str(buy))
-            print(f'\t| buy: {buy} |')
+        buy_orders = self.get_orders(ticker=ticker, side=Side.Buy)
+        for buy in buy_orders:
+            padding_len = display_width - len(str(buy)) - 8
+            padding = ' ' * padding_len
+            print(f'\t|  buy: {buy}{padding} |')
 
         print("\t+" + '-'*display_width + "+")
-        sell_side = ob[Generator.Side.Sell]
-        for sell in sell_side:
-            line_len = len(str(sell))
-            print(f'\t| sell: {sell} |')
+        sell_orders = self.get_orders(ticker=ticker, side=Side.Sell)
+        for sell in sell_orders:
+            padding_len = display_width - len(str(sell)) - 8
+            padding = ' ' * padding_len
+            print(f'\t| sell: {sell}{padding} |')
         print("\t+" + '-'*display_width + "+")
