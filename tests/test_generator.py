@@ -22,13 +22,14 @@ from pitch.generator import Generator
 
 from pitch.add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
 from pitch.order_executed import OrderExecuted, OrderExecutedAtPriceSize
+from pitch.orderbook import Side
 from pitch.reduce_size import ReduceSizeLong, ReduceSizeShort
 
 from pitch.generator import WatchListItem
 
 
 def setupTest(ticker: str,
-              side: 'Generator.Side',
+              side: 'Side',
               book_size_range: Tuple[int, int] = None,
               price_range: Tuple[float, float] = None,
               size_range: Tuple[int, int] = None,
@@ -58,13 +59,13 @@ def setupTest(ticker: str,
         seed=seed
     )
     gen._order_book[ticker] = {
-        Generator.Side.Buy: [],
-        Generator.Side.Sell: []
+        Side.Buy: [],
+        Side.Sell: []
     }
     if num_orders != 0:
-        start_price = price_range[1] if side == Generator.Side.Buy else price_range[0]
+        start_price = price_range[1] if side == Side.Buy else price_range[0]
         price_interval = (price_range[1] - price_range[0]) / (num_orders * 2)
-        if side == Generator.Side.Buy:
+        if side == Side.Buy:
             price_interval *= -1
         # print(f'start_price: {start_price}')
         # print(f'price_interval: {price_interval}')
@@ -132,7 +133,7 @@ class TestGenerator(TestCase):
         side = gen._pickSide()
 
         # THEN
-        assert_that(side, equal_to(Generator.Side.Buy))
+        assert_that(side, equal_to(Side.Buy))
 
     def test_pickSide_Sell(self):
         # GIVEN
@@ -148,7 +149,7 @@ class TestGenerator(TestCase):
         side = gen._pickSide()
 
         # THEN
-        assert_that(side, equal_to(Generator.Side.Sell))
+        assert_that(side, equal_to(Side.Sell))
 
     # 3 - Pick Message Time
     def test_pickTime_first(self):
@@ -208,7 +209,7 @@ class TestGenerator(TestCase):
             start_time=datetime(2023, 5, 7, 9, 30, 0)
         )
         ticker = 'TSLA'
-        side = Generator.Side.Buy
+        side = Side.Buy
 
         # WHEN
         new_msg_cat = gen._pickMsgCategory(ticker=ticker, side=side)
@@ -228,9 +229,9 @@ class TestGenerator(TestCase):
             start_time=datetime(2023, 5, 7, 9, 30, 0)
         )
         ticker = 'TSLA'
-        side = Generator.Side.Buy
+        side = Side.Buy
         gen._order_book[ticker] = {
-            Generator.Side.Buy: [
+            Side.Buy: [
                 Generator.Order(ticker=ticker,
                                 side=side,
                                 price=50.05,
@@ -252,7 +253,7 @@ class TestGenerator(TestCase):
                                 quantity=100,
                                 order_id="ORID0004"),
             ],
-            Generator.Side.Sell: []
+            Side.Sell: []
         }
 
         # WHEN
@@ -274,12 +275,12 @@ class TestGenerator(TestCase):
             seed=100
         )
         ticker = 'TSLA'
-        side = Generator.Side.Buy
+        side = Side.Buy
         gen._order_book[ticker] = {
-            Generator.Side.Buy: [(50.05, 100), (50.04, 100),
+            Side.Buy: [(50.05, 100), (50.04, 100),
                                  (50.03, 100)
                                  ],
-            Generator.Side.Sell: []
+            Side.Sell: []
         }
 
         # WHEN
@@ -342,7 +343,7 @@ class TestGenerator(TestCase):
         # GIVEN
         pick_rand_msg.return_value = AddOrderLong
         ticker = 'TSLA'
-        side = Generator.Side.Buy
+        side = Side.Buy
         price_range = (75, 100)
         size_range = (25, 100)
         gen = setupTest(ticker=ticker,
@@ -377,7 +378,7 @@ class TestGenerator(TestCase):
         # GIVEN
         pick_rand_msg.return_value = AddOrderShort
         ticker = 'MSFT'
-        side = Generator.Side.Buy
+        side = Side.Buy
         price_range = (50, 100)
         size_range = (50, 100)
         gen = setupTest(ticker=ticker,
@@ -414,7 +415,7 @@ class TestGenerator(TestCase):
         # GIVEN
         pick_rand_msg.return_value = ModifyOrderLong
         ticker = 'MSFT'
-        side = Generator.Side.Buy
+        side = Side.Buy
         price_range = (50, 100)
         size_range = (50, 100)
         gen = setupTest(ticker=ticker,
@@ -471,7 +472,7 @@ class TestGenerator(TestCase):
         # GIVEN
         pick_rand_msg.return_value = OrderExecutedAtPriceSize
         ticker = 'MSFT'
-        side = Generator.Side.Buy
+        side = Side.Buy
         price_range = (50, 100)
         size_range = (50, 100)
         gen = setupTest(ticker=ticker,
@@ -523,7 +524,7 @@ class TestGenerator(TestCase):
         # GIVEN
         pick_rand_msg.return_value = ReduceSizeLong
         ticker = 'MSFT'
-        side = Generator.Side.Buy
+        side = Side.Buy
         price_range = (50, 100)
         size_range = (50, 100)
         gen = setupTest(ticker=ticker,
@@ -561,6 +562,8 @@ class TestGenerator(TestCase):
         print(f'selected_order._order_id: {selected_order._order_id}')
         assert_that(new_msg.order_id(), equal_to(selected_order._order_id))
         print(f'selected_order._quantity: {selected_order._quantity}')
+        # 50 = 100 - <new size>
         assert_that(new_msg.canceled_quantity(), equal_to(selected_order._quantity))
 
+        # Need OrderBook Helper Functions
         # Check OrderBook reflects changes
