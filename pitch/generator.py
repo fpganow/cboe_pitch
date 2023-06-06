@@ -169,6 +169,9 @@ class Generator(object):
         # Set 1st Execution Id
         self._nextExecutionId = 0
 
+        # Set 1st Time Offset
+        self._timeOffset = 0
+
         # Size increment
         self._increment = 25
 
@@ -348,6 +351,10 @@ class Generator(object):
         self._nextExecutionId += 1
         return f'EXID{self._nextExecutionId:04d}'
 
+    def _getNextTimeOffset(self) -> int:
+        self._timeOffset += 5
+        return self._timeOffset
+
     def _pickRandomMessageFromCategory(self, msg_cat):
         return self._pickRandom(list(self._msgTypes[msg_cat]))
 
@@ -480,12 +487,11 @@ class Generator(object):
                 random_order._quantity = old_size - canceled_quantity
 
                 if new_msg_type == ReduceSizeLong:
-                    # TODO: Add a _getNextTimeOffset() function
-                    return ReduceSizeLong.from_parms(time_offset=1,
+                    return ReduceSizeLong.from_parms(time_offset=self._getNextTimeOffset(),
                                                      order_id=random_order._order_id,
                                                      canceled_quantity=canceled_quantity)
                 else:
-                    return ReduceSizeShort.from_parms(time_offset=1,
+                    return ReduceSizeShort.from_parms(time_offset=self._getNextTimeOffset(),
                                                       order_id=random_order._order_id,
                                                       canceled_quantity=canceled_quantity)
             else:
@@ -496,7 +502,11 @@ class Generator(object):
 
             print(f'Removing an existing order via {new_msg_cat}')
             if new_msg_type == DeleteOrder:
-                pass
+                self._orderbook.delete_order(ticker=ticker,
+                                             side=side,
+                                             order_id=random_order._order_id)
+                return DeleteOrder.from_parms(time_offset=self._getNextTimeOffset(),
+                                                 order_id=random_order._order_id)
             elif new_msg_type == OrderExecuted:
                 pass
             elif new_msg_type == OrderExecutedAtPriceSize:
@@ -528,4 +538,5 @@ class Generator(object):
                                     new_msg_cat=new_msg_cat)
         # 6 - Return new order
         return next_msg
+
 

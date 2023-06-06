@@ -88,6 +88,12 @@ class OrderBook:
                 return True
         return False
 
+    def delete_order(self, ticker: str, side: Side, order_id: str):
+        for order in self._orderbook[ticker][side]:
+            if order.order_id == order_id:
+                self._orderbook[ticker][side].remove(order)
+                break
+
     def _sort_orders(self, ticker: str, side: Side) -> None:
         if side == Side.Buy:
             self._orderbook[ticker][Side.Buy].sort(key=lambda x: x.price, reverse=True)
@@ -119,3 +125,4 @@ class OrderBook:
             padding = ' ' * padding_len
             print(f'\t| sell: {sell}{padding} |')
         print("\t+" + '-'*display_width + "+")
+

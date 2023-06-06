@@ -588,9 +588,10 @@ class TestGenerator(TestCase):
         new_msg = gen._getNextMsg(ticker=ticker,
                                   side=side,
                                   new_timestamp=gen._pickTime(),
-                                  new_msg_cat=Generator.MsgType.Delete)
+                                  new_msg_cat=Generator.MsgType.Remove)
 
         # THEN
-        assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Delete]))
+        assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Remove]))
         assert_that(new_msg, instance_of(DeleteOrder))
         assert_that(new_msg.order_id(), equal_to(selected_order._order_id))
+        assert_that(gen._orderbook.get_orders(ticker=ticker, side=side), has_length(3))
