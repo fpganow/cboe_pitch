@@ -8,7 +8,6 @@ def parse_args(parser) ->  Any:
     return parser.parse_args()
 
 def main():
-    print('Hello World')
 
     parser = argparse.ArgumentParser(
             prog='PITCH.Generator', 
@@ -44,13 +43,14 @@ def main():
                           msg_rate_p_sec=1,
                           start_time=start_time,
                           )
-    generator.print_OrderBook(ticker)
+    generator._orderbook.print_order_book(ticker)
     for i in range(num_of_msgs):
         new_msg = generator.getNextMsg()
-        print('-'*80)
-        print(f'new_msg: {new_msg} ({type(new_msg)})')
+        print('-'*100)
+        pretty_msg_type = str(type(new_msg)).split('.')[-1][:-2]
+        print(f'new_msg: {new_msg} ({pretty_msg_type})')
         print('-'*10)
-        generator.print_OrderBook(ticker)
+        generator._orderbook.print_order_book(ticker)
 
 if __file__ == "__main__":
     main()

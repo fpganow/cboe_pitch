@@ -111,6 +111,7 @@ class OrderBook:
 
         display_width = 60
 
+        # TODO: Handle empty OrderBook, no buys, no sells
         print("\t+" + '-'*display_width + "+")
         buy_orders = self.get_orders(ticker=ticker, side=Side.Buy)
         for buy in buy_orders:

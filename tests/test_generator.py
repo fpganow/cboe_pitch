@@ -17,7 +17,7 @@ from hamcrest import (
     all_of, instance_of, not_
 )
 
-from pitch import ModifyOrderLong
+from pitch import ModifyOrderLong, TradeLong
 from pitch.generator import Generator
 
 from pitch.add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
@@ -561,5 +561,38 @@ class TestGenerator(TestCase):
         # THEN
         assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Remove]))
         assert_that(new_msg, instance_of(DeleteOrder))
+        assert_that(new_msg.order_id(), equal_to(selected_order._order_id))
+        assert_that(gen._orderbook.get_orders(ticker=ticker, side=side), has_length(3))
+
+    @patch("pitch.generator.Generator._pickRandomOrder")
+    @patch("pitch.generator.Generator._pickRandomMessageFromCategory")
+    def test_getNextMsg_Delete_TradeLong(self, pick_rand_msg, pick_rand_ord):
+        # GIVEN
+        pick_rand_msg.return_value = TradeLong
+        ticker = 'NVDA'
+        side = Side.Buy
+        price_range = (50, 100)
+        size_range = (25, 100)
+        gen = setupTest(ticker=ticker,
+                        side=side,
+                        book_size_range=(1, 3),
+                        price_range=price_range,
+                        size_range=size_range,
+                        num_orders=4,
+                        seed=9900
+                        )
+        selected_order = gen._orderbook.get_orders(ticker=ticker, side=side)[0]
+        pick_rand_ord.return_value = selected_order
+
+        # WHEN
+        print(f'Order selected to be deleted: ({selected_order})')
+        new_msg = gen._getNextMsg(ticker=ticker,
+                                  side=side,
+                                  new_timestamp=gen._pickTime(),
+                                  new_msg_cat=Generator.MsgType.Remove)
+
+        # THEN
+        assert_that(type(new_msg), is_in(gen._msgTypes[Generator.MsgType.Remove]))
+        assert_that(new_msg, instance_of(TradeLong))
         assert_that(new_msg.order_id(), equal_to(selected_order._order_id))
         assert_that(gen._orderbook.get_orders(ticker=ticker, side=side), has_length(3))

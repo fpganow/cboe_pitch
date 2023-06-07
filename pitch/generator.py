@@ -13,7 +13,6 @@ from .reduce_size import ReduceSizeLong, ReduceSizeShort
 from .trade import TradeLong, TradeShort, TradeExpanded
 
 
-
 class WatchListItem:
     def __init__(self,
                  ticker: str,
@@ -66,9 +65,9 @@ class Generator(object):
         Edit = 2
         Remove = 3
 
-#    class Side(Enum):
-#        Buy = 'B'
-#        Sell = 'S'
+    #    class Side(Enum):
+    #        Buy = 'B'
+    #        Sell = 'S'
 
     class Order:
         def __init__(self, ticker, side, price, quantity, order_id):
@@ -274,26 +273,26 @@ class Generator(object):
         if len(self._orderbook.get_orders(ticker=ticker, side=side)) \
                 < self._watch_list[ticker][side].book_size_range[0]:
             # We want an Add
-            #print(f'MsgType.Add')
+            # print(f'MsgType.Add')
             return Generator.MsgType.Add
         # Is book too big?
         elif len(self._orderbook.get_orders(ticker=ticker, side=side)) \
                 > self._watch_list[ticker][side].book_size_range[1]:
             # We want a Delete
-            #print(f'MsgType.Delete')
+            # print(f'MsgType.Delete')
             return Generator.MsgType.Remove
         else:
             # Else - randomly choose
-            #print(f'MsgType.Random')
+            # print(f'MsgType.Random')
             rnd_num = self._rng.integers(low=1, high=3)
             if rnd_num == 1:
-                #print(f'Generator.MsgType.Add')
+                # print(f'Generator.MsgType.Add')
                 return Generator.MsgType.Add
             elif rnd_num == 2:
-                #print(f'Generator.MsgType.Edit')
+                # print(f'Generator.MsgType.Edit')
                 return Generator.MsgType.Edit
             elif rnd_num == 3:
-                #print(f'Generator.MsgType.Remove')
+                # print(f'Generator.MsgType.Remove')
                 return Generator.MsgType.Remove
             else:
                 raise Exception('Error picking a random Message Category')
@@ -492,24 +491,50 @@ class Generator(object):
             random_order = self._pickRandomOrder(ticker=ticker, side=side)
 
             print(f'Removing an existing order via {new_msg_cat}')
+            self._orderbook.delete_order(ticker=ticker,
+                                         side=side,
+                                         order_id=random_order._order_id)
             if new_msg_type == DeleteOrder:
-                self._orderbook.delete_order(ticker=ticker,
-                                             side=side,
-                                             order_id=random_order._order_id)
                 return DeleteOrder.from_parms(time_offset=self._getNextTimeOffset(),
-                                                 order_id=random_order._order_id)
+                                              order_id=random_order._order_id)
             elif new_msg_type == OrderExecuted:
-                pass
+                return OrderExecuted.from_parms(time_offset=self._getNextTimeOffset(),
+                                                order_id=random_order._order_id,
+                                                executed_quantity=random_order._quantity,
+                                                execution_id=self._getNextExecutionId())
             elif new_msg_type == OrderExecutedAtPriceSize:
-                pass
+                return OrderExecutedAtPriceSize.from_parms(time_offset=self._getNextTimeOffset(),
+                                                           order_id=random_order._order_id,
+                                                           executed_quantity=random_order._quantity,
+                                                           remaining_quantity=0,
+                                                           execution_id=self._getNextExecutionId(),
+                                                           price=random_order._price)
             elif new_msg_type == TradeShort:
-                pass
+                return TradeShort.from_parms(time_offset=self._getNextTimeOffset(),
+                                             order_id=random_order._order_id,
+                                             side=random_order._side,
+                                             quantity=random_order._quantity,
+                                             symbol=random_order._ticker,
+                                             price=random_order._price,
+                                             execution_id=self._getNextExecutionId())
             elif new_msg_type == TradeLong:
-                pass
+                return TradeLong.from_parms(time_offset=self._getNextTimeOffset(),
+                                            order_id=random_order._order_id,
+                                            side=random_order._side,
+                                            quantity=random_order._quantity,
+                                            symbol=random_order._ticker,
+                                            price=random_order._price,
+                                            execution_id=self._getNextExecutionId())
             elif new_msg_type == TradeExpanded:
-                pass
-        else:
-            raise Exception('Invalid msg_type')
+                return TradeExpanded.from_parms(time_offset=self._getNextTimeOffset(),
+                                                order_id=random_order._order_id,
+                                                side=random_order._side,
+                                                quantity=random_order._quantity,
+                                                symbol=random_order._ticker,
+                                                price=random_order._price,
+                                                execution_id=self._getNextExecutionId())
+            else:
+                raise Exception('Invalid msg_type')
 
     def getNextMsg(self):
         """
@@ -529,5 +554,3 @@ class Generator(object):
                                     new_msg_cat=new_msg_cat)
         # 6 - Return new order
         return next_msg
-
-
