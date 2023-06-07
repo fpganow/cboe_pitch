@@ -217,42 +217,17 @@ class TestGenerator(TestCase):
 
     def test_pickMsgType_too_many_orders(self):
         # GIVEN
-        watch_list = [
-            WatchListItem(ticker='TSLA', weight=0.20, book_size_range=(1, 3)),
-            WatchListItem(ticker='MSFT', weight=0.80),
-        ]
-        gen = Generator(
-            watch_list=watch_list,
-            msg_rate_p_sec=1,
-            start_time=datetime(2023, 5, 7, 9, 30, 0)
-        )
         ticker = 'TSLA'
         side = Side.Buy
-        gen._order_book[ticker] = {
-            Side.Buy: [
-                Generator.Order(ticker=ticker,
-                                side=side,
-                                price=50.05,
-                                quantity=100,
-                                order_id="ORID0001"),
-                Generator.Order(ticker=ticker,
-                                side=side,
-                                price=50.04,
-                                quantity=100,
-                                order_id="ORID0002"),
-                Generator.Order(ticker=ticker,
-                                side=side,
-                                price=50.03,
-                                quantity=100,
-                                order_id="ORID0003"),
-                Generator.Order(ticker=ticker,
-                                side=side,
-                                price=50.02,
-                                quantity=100,
-                                order_id="ORID0004"),
-            ],
-            Side.Sell: []
-        }
+        price_range = (75, 100)
+        size_range = (25, 100)
+        gen = setupTest(ticker=ticker,
+                        side=side,
+                        book_size_range=(1, 3),
+                        price_range=price_range,
+                        size_range=size_range,
+                        num_orders=4
+                        )
 
         # WHEN
         new_msg_cat = gen._pickMsgCategory(ticker=ticker, side=side)
@@ -262,24 +237,17 @@ class TestGenerator(TestCase):
 
     def test_pickMsgType_within_size(self):
         # GIVEN
-        watch_list = [
-            WatchListItem(ticker='TSLA', weight=0.20, book_size_range=(1, 3)),
-            WatchListItem(ticker='MSFT', weight=0.80),
-        ]
-        gen = Generator(
-            watch_list=watch_list,
-            msg_rate_p_sec=1,
-            start_time=datetime(2023, 5, 7, 9, 30, 0),
-            seed=100
-        )
         ticker = 'TSLA'
         side = Side.Buy
-        gen._order_book[ticker] = {
-            Side.Buy: [(50.05, 100), (50.04, 100),
-                                 (50.03, 100)
-                                 ],
-            Side.Sell: []
-        }
+        price_range = (75, 100)
+        size_range = (25, 100)
+        gen = setupTest(ticker=ticker,
+                        side=side,
+                        book_size_range=(1, 3),
+                        price_range=price_range,
+                        size_range=size_range,
+                        num_orders=3
+                        )
 
         # WHEN
         new_msg_cat = gen._pickMsgCategory(ticker=ticker, side=side)

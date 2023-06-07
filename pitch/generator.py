@@ -155,13 +155,8 @@ class Generator(object):
 
         # Initialize OrderBook for each ticker in watch_list
         self._orderbook = OrderBook()
-        self._order_book = {} # TODO: REMOVE
         for ticker, watch_list_item in self._watch_list.items():
             self._orderbook.add_ticker(ticker=ticker)
-            self._order_book[ticker] = { # TODO: REMOVE
-                Side.Buy: [],
-                Side.Sell: []
-            }
 
         # Set 1st Order Id
         self._nextOrderNum = 0
@@ -273,19 +268,15 @@ class Generator(object):
 
     def _pickMsgCategory(self, ticker: str, side: 'Side'):
         if self._orderbook.has_ticker(ticker=ticker) is False:
-        #if ticker not in self._order_book:
             raise Exception(f'Invalid Ticker "{ticker}" (not in OrderBook)')
 
         # Is book too small?
-        # if len(self._orderBook[ticker][side]) < self._book_size_range[0]:
-#        if len(self._order_book[ticker][side])
         if len(self._orderbook.get_orders(ticker=ticker, side=side)) \
                 < self._watch_list[ticker][side].book_size_range[0]:
             # We want an Add
             #print(f'MsgType.Add')
             return Generator.MsgType.Add
         # Is book too big?
-        # elif len(self._order_book[ticker][side])
         elif len(self._orderbook.get_orders(ticker=ticker, side=side)) \
                 > self._watch_list[ticker][side].book_size_range[1]:
             # We want a Delete
@@ -376,7 +367,7 @@ class Generator(object):
                     order_id=new_order_id,
                     side=new_side,
                     quantity=new_size,
-                    ymbol=ticker,
+                    symbol=ticker,
                     price=new_price,
                 )
             elif new_msg_type == AddOrderShort:
