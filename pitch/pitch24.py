@@ -82,8 +82,11 @@ class FieldSpec:
         if self._field_type == FieldType.Alphanumeric:
             return self._value.encode()
         elif self._field_type == FieldType.Binary:
+            from datetime import datetime
             if type(self._value) is str:
                 return self._value.encode()
+            elif type(self._value) is datetime:
+                print(f'Type is {type(self._value)}')
             return self._value.to_bytes(self._length, byteorder="little")
         elif self._field_type == FieldType.BinaryLongPrice:
             tmp_val = int(self._value * 10_000)
@@ -251,6 +254,8 @@ class MessageBase(object):
         # executed_quantity
         # remaining_quantity
         # execution_id
+        print(f'type(self): {type(self)}')
+        pretty_msg_type = str(type(self)).split('.')[-1][:-2]
         msg_str = "("
         for field_spec in self._field_specs.items():
             if field_spec[0] == FieldName.Symbol:
