@@ -10,7 +10,7 @@ def parse_args(parser) ->  Any:
 
 def main():
     parser = argparse.ArgumentParser(
-            prog='PITCH.Generator', 
+            prog='PITCH.Generator',
             description='PITCH Message Generator and Parser',
             epilog='Bottom of help text'
             )
@@ -47,7 +47,7 @@ def main():
     print_line('=', '=', sep_len)
     print_line('=', '=', sep_len)
     print('Initial Order Book\n')
-    generator._orderbook.print_order_book(ticker)
+#    generator._orderbook.print_order_book(ticker)
 
     f_ascii = open('orders.log', 'w')
     f_bin = open('orders.dat', 'wb')
@@ -63,9 +63,10 @@ def main():
         print(f'get_bytes(): {new_msg.get_bytes()}')
 
         f_ascii.write(f'{str(new_msg)}\n')
+        f_bin.write(new_msg.get_bytes())
 
         print_line(' ', ' ')
-        generator._orderbook.print_order_book(ticker)
+#        generator._orderbook.print_order_book(ticker)
 
     f_ascii.close()
     f_bin.close()

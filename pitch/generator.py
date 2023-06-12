@@ -11,6 +11,7 @@ from .order_executed import OrderExecuted, OrderExecutedAtPriceSize
 from .orderbook import OrderBook, Side
 from .reduce_size import ReduceSizeLong, ReduceSizeShort
 from .trade import TradeLong, TradeShort, TradeExpanded
+from .time import Time
 
 
 class WatchListItem:
@@ -139,14 +140,18 @@ class Generator(object):
                 Side.Sell: watch_list_item,
             }
 
-            # Rate <number of messages> / <per second>
+        # Rate <number of messages> / <per second>
         self._msg_rate_p_sec = msg_rate_p_sec
 
         # Start Time - Time of first message
-        # Current Time - Keep track of time for next message
+        # Current Time - Keep track of time for next Time message
+        #                (Should be sent when the second changes)
         if start_time is None:
             start_time = datetime.now()
-        self._current_time = start_time
+        self._time = start_time
+        self._time_offset = 0
+        self._time_interval_ms = 1_000 // self._msg_rate_p_sec
+        self._time_interval_ns = 1_000_000_000 // self._msg_rate_p_sec
 
         # Seed the random number generator to facilitate easier testing
         np.random.seed(seed)
@@ -162,9 +167,6 @@ class Generator(object):
 
         # Set 1st Execution Id
         self._nextExecutionId = 0
-
-        # Set 1st Time Offset
-        self._timeOffset = 0
 
         # Size increment
         self._increment = 25
@@ -196,9 +198,6 @@ class Generator(object):
 
         # Total time to generate messages for
         self._totalTime = total_time_s
-
-        # Internal variable for tracking Order message creation (an orderbook)
-        self._orderBook = {}
 
     def rchoose(self, in_list):
         """
@@ -240,22 +239,43 @@ class Generator(object):
                 return list1[idx]
         return list1[-1]
 
-    def _pickTicker(self):
+    def _pickTicker(self) -> str:
         if len(self._watch_list.items()) == 1:
             return self._watch_list[list(self._watch_list.keys())[0]][Side.Buy].ticker
         return self.rchoose([(ticker, val[Side.Buy].weight) for ticker, val in self._watch_list.items()])
 
-    def _pickSide(self):
+    def _pickSide(self) -> Side:
         # rng -> I typed ngr
         if self._rng.integers(low=0, high=2) == 0:
             return Side.Buy
         return Side.Sell
 
-    def _pickTime(self):
-        next_time = self._current_time
-        time_diff_ms = 1_000 // self._msg_rate_p_sec
-        self._current_time = self._current_time + timedelta(milliseconds=time_diff_ms)
-        return next_time
+    def _isTimeMsgNeeded(self) -> bool:
+        """
+        We keep track of the current 'Time Offset', which is the number
+        of nanoseconds since the last 'Time' message, once the offset
+        is greater than or equal to 1 second, we should send out a new
+        'Time' message and remove 1 second worth of time from the time offset
+        """
+        if self._time_offset >= 1_000_000_000:
+            return True
+        return False
+
+    def _getTimeMessage(self) -> Time:
+        self._time = self._time + timedelta(seconds=1)
+        now = self._time
+        seconds_since_midnight = (
+                now - now.replace(hour=0, minute=0, second=0, microsecond=0)
+            ).total_seconds()
+        seconds_since_midnight = int(seconds_since_midnight)
+        self._time_offset %= 1_000_000_000
+
+        #print(f'seconds_since_midnight: {seconds_since_midnight}')
+        return Time.from_parms(time=seconds_since_midnight)
+
+    def _getTimeOffset(self) -> int:
+        self._time_offset += self._time_interval_ns
+        return self._time_offset
 
     def _pickRandomOrder(self, ticker: str, side: Side) -> Order:
         return self._pickRandom(self._orderbook.get_orders(ticker=ticker, side=side))
@@ -326,12 +346,7 @@ class Generator(object):
                 r_idx = self._rng.integers(low=0, high=r_2 + 1)
                 new_size = size_range[0] + (r_idx * self._increment)
 
-        return new_size
-
-    #    def _pickPriceSize(self, ticker, side) -> tuple[float, int]:
-    #        size_range = self._watch_list[ticker][side].size_range
-    #
-    #        return new_price, new_size
+        return int(new_size)
 
     def _getNextOrderId(self) -> str:
         self._nextOrderNum += 1
@@ -341,17 +356,14 @@ class Generator(object):
         self._nextExecutionId += 1
         return f'EXID{self._nextExecutionId:04d}'
 
-    def _getNextTimeOffset(self) -> int:
-        self._timeOffset += 5
-        return self._timeOffset
-
     def _pickRandomMessageFromCategory(self, msg_cat):
         return self._pickRandom(list(self._msgTypes[msg_cat]))
 
-    def _getNextMsg(self, ticker: str, side: Side, new_timestamp, new_msg_cat):
+    def _getNextMsg(self, ticker: str, side: Side, new_timestamp: int, new_msg_cat):
         new_side = 'B' if side == Side.Buy else 'S'
         new_msg_type = self._pickRandomMessageFromCategory(msg_cat=new_msg_cat)
         new_order_id = self._getNextOrderId()
+        print(f'new_timestamp: {new_timestamp} - {type(new_timestamp)}')
 
         if new_msg_cat == Generator.MsgType.Add:
             # print(f'Adding a new order via {new_msg_cat}')
@@ -429,13 +441,13 @@ class Generator(object):
                 print('-- Order Book After --')
                 self._orderbook.print_order_book(ticker=ticker)
                 if new_msg_type == ModifyOrderLong:
-                    return ModifyOrderLong.from_parms(time_offset=1,
+                    return ModifyOrderLong.from_parms(time_offset=new_timestamp,
                                                       price=new_price,
                                                       quantity=new_size,
                                                       order_id=random_order._order_id
                                                       )
                 elif new_msg_type == ModifyOrderShort:
-                    return ModifyOrderShort.from_parms(time_offset=1,
+                    return ModifyOrderShort.from_parms(time_offset=new_timestamp,
                                                        price=new_price,
                                                        quantity=new_size,
                                                        order_id=random_order._order_id
@@ -453,7 +465,7 @@ class Generator(object):
                 print(f'New Size range: {new_size_range}')
                 new_size = self._pickNewSize(size_range=new_size_range, old_size=old_size)
                 print(f'New size: {new_size}')
-                return OrderExecutedAtPriceSize.from_parms(time_offset=1,
+                return OrderExecutedAtPriceSize.from_parms(time_offset=new_timestamp,
                                                            order_id=random_order._order_id,
                                                            price=random_order._price,
                                                            executed_quantity=old_size - new_size,
@@ -477,11 +489,11 @@ class Generator(object):
                 random_order._quantity = old_size - canceled_quantity
 
                 if new_msg_type == ReduceSizeLong:
-                    return ReduceSizeLong.from_parms(time_offset=self._getNextTimeOffset(),
+                    return ReduceSizeLong.from_parms(time_offset=new_timestamp,
                                                      order_id=random_order._order_id,
                                                      canceled_quantity=canceled_quantity)
                 else:
-                    return ReduceSizeShort.from_parms(time_offset=self._getNextTimeOffset(),
+                    return ReduceSizeShort.from_parms(time_offset=new_timestamp,
                                                       order_id=random_order._order_id,
                                                       canceled_quantity=canceled_quantity)
             else:
@@ -495,22 +507,22 @@ class Generator(object):
                                          side=side,
                                          order_id=random_order._order_id)
             if new_msg_type == DeleteOrder:
-                return DeleteOrder.from_parms(time_offset=self._getNextTimeOffset(),
+                return DeleteOrder.from_parms(time_offset=new_timestamp,
                                               order_id=random_order._order_id)
             elif new_msg_type == OrderExecuted:
-                return OrderExecuted.from_parms(time_offset=self._getNextTimeOffset(),
+                return OrderExecuted.from_parms(time_offset=new_timestamp,
                                                 order_id=random_order._order_id,
                                                 executed_quantity=random_order._quantity,
                                                 execution_id=self._getNextExecutionId())
             elif new_msg_type == OrderExecutedAtPriceSize:
-                return OrderExecutedAtPriceSize.from_parms(time_offset=self._getNextTimeOffset(),
+                return OrderExecutedAtPriceSize.from_parms(time_offset=new_timestamp,
                                                            order_id=random_order._order_id,
                                                            executed_quantity=random_order._quantity,
                                                            remaining_quantity=0,
                                                            execution_id=self._getNextExecutionId(),
                                                            price=random_order._price)
             elif new_msg_type == TradeShort:
-                return TradeShort.from_parms(time_offset=self._getNextTimeOffset(),
+                return TradeShort.from_parms(time_offset=new_timestamp,
                                              order_id=random_order._order_id,
                                              side=random_order._side,
                                              quantity=random_order._quantity,
@@ -518,7 +530,7 @@ class Generator(object):
                                              price=random_order._price,
                                              execution_id=self._getNextExecutionId())
             elif new_msg_type == TradeLong:
-                return TradeLong.from_parms(time_offset=self._getNextTimeOffset(),
+                return TradeLong.from_parms(time_offset=new_timestamp,
                                             order_id=random_order._order_id,
                                             side=random_order._side,
                                             quantity=random_order._quantity,
@@ -526,7 +538,7 @@ class Generator(object):
                                             price=random_order._price,
                                             execution_id=self._getNextExecutionId())
             elif new_msg_type == TradeExpanded:
-                return TradeExpanded.from_parms(time_offset=self._getNextTimeOffset(),
+                return TradeExpanded.from_parms(time_offset=new_timestamp,
                                                 order_id=random_order._order_id,
                                                 side=random_order._side,
                                                 quantity=random_order._quantity,
@@ -539,12 +551,22 @@ class Generator(object):
     def getNextMsg(self):
         """
         """
+        # TODO: Check if we have to return a Time message
+        #   - We send a new Time message whenever a new second
+        #      Number of whole seconds from midnight Eastern Time
+        #   - Use self._msg_rate_p_sec to keep track of current
+        #      message time
+        #  _current_base_time = 9:30:00 AM
+        #  _current_time_offset = 5_000 milliseconds
+        if self._isTimeMsgNeeded():
+            return self._getTimeMessage()
+
         # 1 - Pick Ticker
         ticker = self._pickTicker()
         # 2 - Pick Side
         side = self._pickSide()
         # 3 - Pick Message Time
-        new_timestamp = self._pickTime()
+        new_timestamp = self._getTimeOffset()
         # 4 - Pick Message Category
         new_msg_cat = self._pickMsgCategory(ticker=ticker, side=side)
         # 5 - Set Price and Size

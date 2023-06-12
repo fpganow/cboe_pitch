@@ -163,7 +163,7 @@ class TestGenerator(TestCase):
         )
 
         # WHEN
-        msg_time = gen._pickTime()
+        msg_time = gen._pickTimeOffset()
 
         # THEN
         assert_that(msg_time, equal_to(datetime(2023, 5, 7, 9, 30, 0)))
@@ -181,11 +181,11 @@ class TestGenerator(TestCase):
         )
 
         # WHEN
-        msg_time_1 = gen._pickTime()
-        msg_time_2 = gen._pickTime()
-        msg_time_3 = gen._pickTime()
-        msg_time_4 = gen._pickTime()
-        msg_time_5 = gen._pickTime()
+        msg_time_1 = gen._pickTimeOffset()
+        msg_time_2 = gen._pickTimeOffset()
+        msg_time_3 = gen._pickTimeOffset()
+        msg_time_4 = gen._pickTimeOffset()
+        msg_time_5 = gen._pickTimeOffset()
 
         # THEN
         assert_that(msg_time_1, equal_to(datetime(2023, 5, 7, 9, 30, 0, 0)))
@@ -325,7 +325,7 @@ class TestGenerator(TestCase):
         # in category
         new_msg = gen._getNextMsg(ticker=ticker,
                                   side=side,
-                                  new_timestamp=gen._pickTime(),
+                                  new_timestamp=gen._pickTimeOffset(),
                                   new_msg_cat=Generator.MsgType.Add)
 
         # THEN
@@ -360,7 +360,7 @@ class TestGenerator(TestCase):
         # in category
         new_msg = gen._getNextMsg(ticker=ticker,
                                   side=side,
-                                  new_timestamp=gen._pickTime(),
+                                  new_timestamp=gen._pickTimeOffset(),
                                   new_msg_cat=Generator.MsgType.Add)
 
         # THEN
@@ -406,7 +406,7 @@ class TestGenerator(TestCase):
         # in category
         new_msg = gen._getNextMsg(ticker=ticker,
                                   side=side,
-                                  new_timestamp=gen._pickTime(),
+                                  new_timestamp=gen._pickTimeOffset(),
                                   new_msg_cat=Generator.MsgType.Edit)
 
         #print(f'Modify Message: {new_msg}')
@@ -461,7 +461,7 @@ class TestGenerator(TestCase):
         # in category
         new_msg = gen._getNextMsg(ticker=ticker,
                                   side=side,
-                                  new_timestamp=gen._pickTime(),
+                                  new_timestamp=gen._pickTimeOffset(),
                                   new_msg_cat=Generator.MsgType.Edit)
 
         #print(f'Modify Message: {new_msg}')
@@ -513,7 +513,7 @@ class TestGenerator(TestCase):
         # in category
         new_msg = gen._getNextMsg(ticker=ticker,
                                   side=side,
-                                  new_timestamp=gen._pickTime(),
+                                  new_timestamp=gen._pickTimeOffset(),
                                   new_msg_cat=Generator.MsgType.Edit)
 
         # print(f'Modify Message: {new_msg}')
@@ -555,7 +555,7 @@ class TestGenerator(TestCase):
         print(f'Order selected to be deleted: ({selected_order})')
         new_msg = gen._getNextMsg(ticker=ticker,
                                   side=side,
-                                  new_timestamp=gen._pickTime(),
+                                  new_timestamp=gen._pickTimeOffset(),
                                   new_msg_cat=Generator.MsgType.Remove)
 
         # THEN
@@ -588,7 +588,7 @@ class TestGenerator(TestCase):
         print(f'Order selected to be deleted: ({selected_order})')
         new_msg = gen._getNextMsg(ticker=ticker,
                                   side=side,
-                                  new_timestamp=gen._pickTime(),
+                                  new_timestamp=gen._pickTimeOffset(),
                                   new_msg_cat=Generator.MsgType.Remove)
 
         # THEN
