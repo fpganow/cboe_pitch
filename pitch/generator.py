@@ -149,7 +149,8 @@ class Generator(object):
         if start_time is None:
             start_time = datetime.now()
         self._time = start_time
-        self._time_offset = 0
+        #self._time_offset = 0
+        self._time_offset = 1_000_000_000
         self._time_interval_ms = 1_000 // self._msg_rate_p_sec
         self._time_interval_ns = 1_000_000_000 // self._msg_rate_p_sec
 
@@ -268,14 +269,17 @@ class Generator(object):
                 now - now.replace(hour=0, minute=0, second=0, microsecond=0)
             ).total_seconds()
         seconds_since_midnight = int(seconds_since_midnight)
+        #print(f'BEFORE: self._time_offset: {self._time_offset}')
         self._time_offset %= 1_000_000_000
+        #print(f'AFTER: self._time_offset: {self._time_offset}')
 
         #print(f'seconds_since_midnight: {seconds_since_midnight}')
         return Time.from_parms(time=seconds_since_midnight)
 
     def _getTimeOffset(self) -> int:
+        next_time_offset = self._time_offset
         self._time_offset += self._time_interval_ns
-        return self._time_offset
+        return next_time_offset
 
     def _pickRandomOrder(self, ticker: str, side: Side) -> Order:
         return self._pickRandom(self._orderbook.get_orders(ticker=ticker, side=side))
@@ -363,7 +367,7 @@ class Generator(object):
         new_side = 'B' if side == Side.Buy else 'S'
         new_msg_type = self._pickRandomMessageFromCategory(msg_cat=new_msg_cat)
         new_order_id = self._getNextOrderId()
-        print(f'new_timestamp: {new_timestamp} - {type(new_timestamp)}')
+        #print(f'new_timestamp: {new_timestamp} - {type(new_timestamp)}')
 
         if new_msg_cat == Generator.MsgType.Add:
             # print(f'Adding a new order via {new_msg_cat}')
@@ -425,20 +429,20 @@ class Generator(object):
                 print(f'new_price: {new_price}')
 
                 # Pick a new Size for this Order
-                print('-' * 50)
-                print(f'size_range: {self._watch_list[ticker][side].size_range}')
-                print(f'old_size: {random_order._quantity}')
+#                print('-' * 50)
+#                print(f'size_range: {self._watch_list[ticker][side].size_range}')
+#                print(f'old_size: {random_order._quantity}')
                 new_size = self._pickNewSize(size_range=self._watch_list[ticker][side].size_range,
                                              old_size=random_order._quantity)
-                print(f'new_size: {new_size}')
+#                print(f'new_size: {new_size}')
 
                 random_order._price = new_price
                 random_order._quantity = new_size
-                print('-' * 50)
-                print(f'Modified Order: {random_order}')
+#                print('-' * 50)
+#                print(f'Modified Order: {random_order}')
 
-                print('-' * 50)
-                print('-- Order Book After --')
+#                print('-' * 50)
+#                print('-- Order Book After --')
                 self._orderbook.print_order_book(ticker=ticker)
                 if new_msg_type == ModifyOrderLong:
                     return ModifyOrderLong.from_parms(time_offset=new_timestamp,

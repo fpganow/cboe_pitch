@@ -15,6 +15,16 @@ def main():
             epilog='Bottom of help text'
             )
     parser.add_argument(
+            '-v',
+            '--verbose',
+            default=False,
+            help='Verbose')
+    parser.add_argument(
+            '-n',
+            '--num-of-msgs',
+            default=10,
+            help='Number of Messages to Generate')
+    parser.add_argument(
             '-o',
             '--output-file',
             default='pitch24.dat',
@@ -24,8 +34,10 @@ def main():
     # Set these variables from argument
     ticker = 'MSFT'
     weight = 0.50
-    num_of_msgs = 3
+    num_of_msgs = 10
     book_size_range = (2, 4)
+    msg_rate_p_sec = 5
+    verbose = args.verbose
 
     start_time = datetime.now()
 
@@ -40,33 +52,39 @@ def main():
                           )
             ]
     generator = Generator(watch_list=watch_list,
-                          msg_rate_p_sec=1,
+                          msg_rate_p_sec=msg_rate_p_sec,
                           start_time=start_time,
                           )
     sep_len = 80
-    print_line('=', '=', sep_len)
-    print_line('=', '=', sep_len)
-    print('Initial Order Book\n')
-#    generator._orderbook.print_order_book(ticker)
+    if verbose:
+        print_line('=', '=', sep_len)
+        print_line('=', '=', sep_len)
+        print('Initial Order Book\n')
+        generator._orderbook.print_order_book(ticker)
 
     f_ascii = open('orders.log', 'w')
     f_bin = open('orders.dat', 'wb')
 
     for i in range(num_of_msgs):
-        print_line(' ', ' ')
-        print_line(' ', ' ')
+        if verbose:
+            print_line(' ', ' ')
+            print_line(' ', ' ')
         new_msg = generator.getNextMsg()
 
+        if verbose:
+            print_line('=', '=', sep_len)
         print_line('=', '=', sep_len)
-        print_line('=', '=', sep_len)
-        print(f'Message #{i+1}:\n\t{new_msg}')
-        print(f'get_bytes(): {new_msg.get_bytes()}')
+        print(f'Message #{i+1}:    {new_msg}')
+        new_msg_bytes = new_msg.get_bytes()
+        new_msg_bytes_str = ', '.join(['0x' + str(x) for x in new_msg_bytes])
+#        print(f'new_msg_bytes:\n\t{new_msg_bytes_str}')
 
         f_ascii.write(f'{str(new_msg)}\n')
         f_bin.write(new_msg.get_bytes())
 
-        print_line(' ', ' ')
-#        generator._orderbook.print_order_book(ticker)
+        if verbose:
+            print_line(' ', ' ')
+            generator._orderbook.print_order_book(ticker)
 
     f_ascii.close()
     f_bin.close()

@@ -273,10 +273,18 @@ class MessageBase(object):
                 msg_str += f'{self.order_id()}, '
             elif field_spec[0] == FieldName.Quantity:
                 msg_str += f'{self.quantity()}, '
+            elif field_spec[0] == FieldName.Time:
+                msg_str += f'{self.time():,}, '
             elif field_spec[0] == FieldName.TimeOffset:
-                msg_str += f'{self.time_offset()}, '
-            #else:
-            #    print(f'key: {field_spec[0]}')
+                msg_str += f'{self.time_offset():,}, '
+            elif (field_spec[0] == FieldName.Length or
+                  field_spec[0] == FieldName.AddFlags or
+                  field_spec[0] == FieldName.ParticipantId or
+                  field_spec[0] == FieldName.CustomerIndicator or
+                  field_spec[0] == FieldName.MessageType):
+                pass
+            else:
+                print(f'key: {field_spec[0]}')
         msg_str = msg_str[:-2]
         msg_str += ")"
         return msg_str
