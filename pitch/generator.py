@@ -313,6 +313,7 @@ class Generator(object):
                 # print(f'Generator.MsgType.Add')
                 return Generator.MsgType.Add
             elif rnd_num == 2:
+                # TODO: If all orders are minimum size, pick Add or Remove
                 # print(f'Generator.MsgType.Edit')
                 return Generator.MsgType.Edit
             elif rnd_num == 3:
@@ -418,15 +419,15 @@ class Generator(object):
             random_order = self._pickRandomOrder(ticker=ticker, side=side)
 
             if new_msg_type == ModifyOrderLong or new_msg_type == ModifyOrderShort:
-                print('-' * 50)
-                print(f'Modifying an existing order via ModifyOrderLong or ModifyOrderShort')
+                #print('-' * 50)
+                #print(f'Modifying an existing order via ModifyOrderLong or ModifyOrderShort')
 
                 # Pick a new Price for this Order
-                print('-' * 50)
-                print(f'price_range: {self._watch_list[ticker][side].price_range}')
+                #print('-' * 50)
+                #print(f'price_range: {self._watch_list[ticker][side].price_range}')
                 new_price = self._pickNewPrice(price_range=self._watch_list[ticker][side].price_range,
                                                old_price=random_order._price)
-                print(f'new_price: {new_price}')
+                #print(f'new_price: {new_price}')
 
                 # Pick a new Size for this Order
 #                print('-' * 50)
@@ -443,7 +444,7 @@ class Generator(object):
 
 #                print('-' * 50)
 #                print('-- Order Book After --')
-                self._orderbook.print_order_book(ticker=ticker)
+#                self._orderbook.print_order_book(ticker=ticker)
                 if new_msg_type == ModifyOrderLong:
                     return ModifyOrderLong.from_parms(time_offset=new_timestamp,
                                                       price=new_price,
@@ -460,15 +461,15 @@ class Generator(object):
                 # Modify existing order 'random_order'
                 # New size will always be smaller
                 old_size = random_order._quantity
-                print(f'Old size: {old_size}')
+                #print(f'Old size: {old_size}')
                 # TODO: If random_order size is equal to the minimum size, pick another order
                 #       if none exists, execute or delete the order (possible to call recursively)
                 if old_size == self._watch_list[ticker][side].size_range[0]:
                     return None
                 new_size_range = (self._watch_list[ticker][side].size_range[0], old_size)
-                print(f'New Size range: {new_size_range}')
+                #print(f'New Size range: {new_size_range}')
                 new_size = self._pickNewSize(size_range=new_size_range, old_size=old_size)
-                print(f'New size: {new_size}')
+                #print(f'New size: {new_size}')
                 return OrderExecutedAtPriceSize.from_parms(time_offset=new_timestamp,
                                                            order_id=random_order._order_id,
                                                            price=random_order._price,
@@ -480,15 +481,15 @@ class Generator(object):
                 # Reduce existing order 'random_order'
                 # New size will always be smaller
                 old_size = random_order._quantity
-                print(f'Old size: {old_size}')
+                #print(f'Old size: {old_size}')
                 # TODO: If random_order size is equal to the minimum size, pick another order
                 #       if none exists, execute or delete the order (possible to call recursively)
                 if old_size == self._watch_list[ticker][side].size_range[0]:
                     return None
                 new_size_range = (self._watch_list[ticker][side].size_range[0], old_size)
-                print(f'New Size range: {new_size_range}')
+                #print(f'New Size range: {new_size_range}')
                 new_size = self._pickNewSize(size_range=new_size_range, old_size=old_size)
-                print(f'New size: {new_size}')
+                #print(f'New size: {new_size}')
                 canceled_quantity = old_size - new_size
                 random_order._quantity = old_size - canceled_quantity
 

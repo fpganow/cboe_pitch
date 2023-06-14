@@ -18,6 +18,7 @@ def main():
             '-v',
             '--verbose',
             default=False,
+            action='store_true',
             help='Verbose')
     parser.add_argument(
             '-n',
@@ -35,7 +36,7 @@ def main():
     ticker = 'MSFT'
     weight = 0.50
     num_of_msgs = 10
-    book_size_range = (2, 4)
+    book_size_range = (1, 3)
     msg_rate_p_sec = 5
     verbose = args.verbose
 
@@ -55,7 +56,7 @@ def main():
                           msg_rate_p_sec=msg_rate_p_sec,
                           start_time=start_time,
                           )
-    sep_len = 80
+    sep_len = 100
     if verbose:
         print_line('=', '=', sep_len)
         print_line('=', '=', sep_len)
@@ -77,7 +78,8 @@ def main():
         print(f'Message #{i+1}:    {new_msg}')
         new_msg_bytes = new_msg.get_bytes()
         new_msg_bytes_str = ', '.join(['0x' + str(x) for x in new_msg_bytes])
-#        print(f'new_msg_bytes:\n\t{new_msg_bytes_str}')
+        if verbose:
+            print(f'bytes:\n\t{new_msg_bytes_str}')
 
         f_ascii.write(f'{str(new_msg)}\n')
         f_bin.write(new_msg.get_bytes())
@@ -88,6 +90,19 @@ def main():
 
     f_ascii.close()
     f_bin.close()
+
+    print_line(' ', ' ')
+    print_line(' ', ' ')
+    print_line('=', '=', sep_len)
+    print('Final OrderBook')
+    print_line('=', '=', sep_len)
+    print_line(' ', ' ')
+    print_line(' ', ' ')
+    generator._orderbook.print_order_book(ticker)
+    print_line(' ', ' ')
+    print_line(' ', ' ')
+    print_line('=', '=', sep_len)
+
 
 if __file__ == "__main__":
     main()

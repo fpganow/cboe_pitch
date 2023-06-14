@@ -271,17 +271,27 @@ class MessageBase(object):
                 msg_str += f'{self.side()}, '
             elif field_spec[0] == FieldName.OrderId:
                 msg_str += f'{self.order_id()}, '
+            elif field_spec[0] == FieldName.CanceledQuantity:
+                msg_str += f'Can={self.canceled_quantity()}, '
+            elif field_spec[0] == FieldName.ExecutedQuantity:
+                msg_str += f'Exe={self.executed_quantity()}, '
+            elif field_spec[0] == FieldName.RemainingQuantity:
+                msg_str += f'Rem={self.remaining_quantity()}, '
             elif field_spec[0] == FieldName.Quantity:
                 msg_str += f'{self.quantity()}, '
             elif field_spec[0] == FieldName.Time:
                 msg_str += f'{self.time():,}, '
             elif field_spec[0] == FieldName.TimeOffset:
                 msg_str += f'{self.time_offset():,}, '
-            elif (field_spec[0] == FieldName.Length or
+            elif (
                   field_spec[0] == FieldName.AddFlags or
-                  field_spec[0] == FieldName.ParticipantId or
                   field_spec[0] == FieldName.CustomerIndicator or
-                  field_spec[0] == FieldName.MessageType):
+                  field_spec[0] == FieldName.ExecutionId or
+                  field_spec[0] == FieldName.Length or
+                  field_spec[0] == FieldName.MessageType or
+                  field_spec[0] == FieldName.ModifyFlags or
+                  field_spec[0] == FieldName.ParticipantId
+                  ):
                 pass
             else:
                 print(f'key: {field_spec[0]}')
