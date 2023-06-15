@@ -1,14 +1,12 @@
 import argparse
 from datetime import datetime
+import logging
 from pitch.generator import Generator, WatchListItem
 import sys
 from typing import Any
 from .util import print_line, print_form
 
-def parse_args(parser) ->  Any:
-    return parser.parse_args()
-
-def main():
+def parse_args() ->  Any:
     parser = argparse.ArgumentParser(
             prog='PITCH.Generator',
             description='PITCH Message Generator and Parser',
@@ -30,8 +28,24 @@ def main():
             '--output-file',
             default='pitch24.dat',
             help='Specify output file')
-    args = parse_args(parser)
 
+    return parser.parse_args()
+
+def set_up_logging(audit_log: str) -> None:
+    logging.basicConfig(format='%(process)d-%(levelname)s-%(message)s')
+    logging.info('Logging Configured')
+
+    stream_handler = logging.StreamHandler()
+    file_handler = logging.FileHandler('')
+
+
+def main():
+    args = parse_args()
+
+    set_up_logging(audit_log='audit.log')
+
+    logging.error('EE')
+    return
     # Set these variables from argument
     ticker = 'MSFT'
     weight = 0.50
