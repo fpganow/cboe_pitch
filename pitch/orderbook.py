@@ -4,8 +4,8 @@ from .util import print_line, print_form
 
 
 class Side(Enum):
-    Buy = 'B'
-    Sell = 'S'
+    Buy = "B"
+    Sell = "S"
 
 
 class Order:
@@ -37,7 +37,7 @@ class Order:
         return self._order_id
 
     def __str__(self):
-        return f'{self._ticker}, [{self._order_id}] {self._price} X {self._quantity}'
+        return f"{self._ticker}, [{self._order_id}] {self._price} X {self._quantity}"
 
 
 class OrderBook:
@@ -54,31 +54,31 @@ class OrderBook:
 
     def add_ticker(self, ticker: str) -> None:
         if ticker not in self._orderbook:
-            self._orderbook[ticker] = {
-                Side.Buy: [],
-                Side.Sell: []
-            }
+            self._orderbook[ticker] = {Side.Buy: [], Side.Sell: []}
 
     def has_ticker(self, ticker: str) -> bool:
         return ticker in self._orderbook
 
-    def add_order(self,
-                  ticker: str,
-                  side: Side,
-                  price: float,
-                  quantity: int,
-                  order_id: str):
+    def add_order(
+        self, ticker: str, side: Side, price: float, quantity: int, order_id: str
+    ):
         order_list = self._orderbook[ticker][side]
         # Check if order already exists
         if self.has_order_id(ticker=ticker, side=side, order_id=order_id):
-            raise Exception(f'Order with ID {order_id} for {ticker}-{side} already exists')
+            raise Exception(
+                f"Order with ID {order_id} for {ticker}-{side} already exists"
+            )
 
         # Add Order
-        order_list.append(Order(ticker=ticker,
-                             side=side,
-                             price=price,
-                             quantity=quantity,
-                             order_id=order_id))
+        order_list.append(
+            Order(
+                ticker=ticker,
+                side=side,
+                price=price,
+                quantity=quantity,
+                order_id=order_id,
+            )
+        )
         # Sort Orders
         self._sort_orders(ticker=ticker, side=side)
 
@@ -110,35 +110,34 @@ class OrderBook:
     def print_order_book(self, ticker: str):
         display_width = 60
 
-        print_line('-', '+')
-        print_form(f'OrderBook for {ticker}')
-        print_line('-', '+')
+        print_line("-", "+")
+        print_form(f"OrderBook for {ticker}")
+        print_line("-", "+")
 
         buy_orders = self.get_orders(ticker=ticker, side=Side.Buy)
         if len(buy_orders) == 0:
-            print_line(' ', '|')
+            print_line(" ", "|")
             no_buys_msg = "No Buy Orders"
-            print_form(f'{no_buys_msg}')
-            print_line(' ', '|')
-            print_line('-', '+')
+            print_form(f"{no_buys_msg}")
+            print_line(" ", "|")
+            print_line("-", "+")
         else:
             for buy in buy_orders:
                 padding_len = display_width - len(str(buy)) - 8
-                padding = ' ' * padding_len
-                print_form(f'Buy: {buy}')
-            print_line('-', '+')
+                padding = " " * padding_len
+                print_form(f"Buy: {buy}")
+            print_line("-", "+")
 
         sell_orders = self.get_orders(ticker=ticker, side=Side.Sell)
         if len(sell_orders) == 0:
             no_sells_msg = "No Sell Orders"
-            print_line(' ', '|')
-            print_form(f'{no_sells_msg}')
-            print_line(' ', '|')
-            print_line('-', '+')
+            print_line(" ", "|")
+            print_form(f"{no_sells_msg}")
+            print_line(" ", "|")
+            print_line("-", "+")
         else:
             for sell in sell_orders:
                 padding_len = display_width - len(str(sell)) - 8
-                padding = ' ' * padding_len
-                print_form(f'Sell: {sell}')
-            print_line('-', '+')
-
+                padding = " " * padding_len
+                print_form(f"Sell: {sell}")
+            print_line("-", "+")

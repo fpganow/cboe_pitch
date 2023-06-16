@@ -82,17 +82,17 @@ class FieldSpec:
         return self._value
 
     def get_bytes(self) -> ByteString:
-        #print(f'type(self): {type(self)}')
+        # print(f'type(self): {type(self)}')
         if self._field_type == FieldType.Alphanumeric:
             return self._value.encode()
         elif self._field_type == FieldType.Binary:
             if type(self._value) is str:
                 return self._value.encode()
             elif type(self._value) is datetime:
-                print(f'Type is datetime: {self._value.microsecond}')
+                print(f"Type is datetime: {self._value.microsecond}")
             elif type(self._value) is time:
-                print(f'Type is time')
-            #print(f'Value is: {self._value} - Type is: {type(self._value)} ')
+                print(f"Type is time")
+            # print(f'Value is: {self._value} - Type is: {type(self._value)} ')
             return self._value.to_bytes(self._length, byteorder="little")
         elif self._field_type == FieldType.BinaryLongPrice:
             tmp_val = int(self._value * 10_000)
@@ -260,44 +260,45 @@ class MessageBase(object):
         # executed_quantity
         # remaining_quantity
         # execution_id
-        pretty_msg_type = str(type(self)).split('.')[-1][:-2]
+        pretty_msg_type = str(type(self)).split(".")[-1][:-2]
         msg_str = f"({pretty_msg_type}, "
         for field_spec in self._field_specs.items():
             if field_spec[0] == FieldName.Symbol:
-                msg_str += f'{self.symbol()}, '
+                msg_str += f"{self.symbol()}, "
             elif field_spec[0] == FieldName.Price:
-                msg_str += f'${self.price()}, '
+                msg_str += f"${self.price()}, "
             elif field_spec[0] == FieldName.SideIndicator:
-                msg_str += f'{self.side()}, '
+                msg_str += f"{self.side()}, "
             elif field_spec[0] == FieldName.OrderId:
-                msg_str += f'{self.order_id()}, '
+                msg_str += f"{self.order_id()}, "
             elif field_spec[0] == FieldName.CanceledQuantity:
-                msg_str += f'Can={self.canceled_quantity()}, '
+                msg_str += f"Can={self.canceled_quantity()}, "
             elif field_spec[0] == FieldName.ExecutedQuantity:
-                msg_str += f'Exe={self.executed_quantity()}, '
+                msg_str += f"Exe={self.executed_quantity()}, "
             elif field_spec[0] == FieldName.RemainingQuantity:
-                msg_str += f'Rem={self.remaining_quantity()}, '
+                msg_str += f"Rem={self.remaining_quantity()}, "
             elif field_spec[0] == FieldName.Quantity:
-                msg_str += f'{self.quantity()}, '
+                msg_str += f"{self.quantity()}, "
             elif field_spec[0] == FieldName.Time:
-                msg_str += f'{self.time():,}, '
+                msg_str += f"{self.time():,}, "
             elif field_spec[0] == FieldName.TimeOffset:
-                msg_str += f'{self.time_offset():,}, '
+                msg_str += f"{self.time_offset():,}, "
             elif (
-                  field_spec[0] == FieldName.AddFlags or
-                  field_spec[0] == FieldName.CustomerIndicator or
-                  field_spec[0] == FieldName.ExecutionId or
-                  field_spec[0] == FieldName.Length or
-                  field_spec[0] == FieldName.MessageType or
-                  field_spec[0] == FieldName.ModifyFlags or
-                  field_spec[0] == FieldName.ParticipantId
-                  ):
+                field_spec[0] == FieldName.AddFlags
+                or field_spec[0] == FieldName.CustomerIndicator
+                or field_spec[0] == FieldName.ExecutionId
+                or field_spec[0] == FieldName.Length
+                or field_spec[0] == FieldName.MessageType
+                or field_spec[0] == FieldName.ModifyFlags
+                or field_spec[0] == FieldName.ParticipantId
+            ):
                 pass
             else:
-                print(f'key: {field_spec[0]}')
+                print(f"key: {field_spec[0]}")
         msg_str = msg_str[:-2]
         msg_str += ")"
         return msg_str
+
 
 class Heartbeat:
     """
