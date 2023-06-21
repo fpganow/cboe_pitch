@@ -4,7 +4,7 @@ import logging
 from pitch.generator import Generator, WatchListItem
 import sys
 from typing import Any
-from .util import print_line, print_form
+from .util import get_line, print_line, get_form, print_form
 
 
 def parse_args() -> Any:
@@ -34,45 +34,30 @@ def set_up_logging(audit_log: str, verbose: bool) -> None:
     if verbose:
         print(f'verbose: {verbose}')
         stream_handler.setLevel(logging.DEBUG)
-#    else:
-        #        stream_handler.setLevel(logging.INFO)
-    stream_format = logging.Formatter('STDOUT:%(name)s - %(levelname)s - %(message)s')
+    else:
+        stream_handler.setLevel(logging.INFO)
+
+    stream_format = logging.Formatter('%(message)s')
     stream_handler.setFormatter(stream_format)
 
-    file_handler = logging.FileHandler(audit_log)
+    file_handler = logging.FileHandler(audit_log, mode='w')
     file_handler.setLevel(logging.DEBUG)
-    file_format = logging.Formatter('FILE:%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_format = logging.Formatter('%(message)s')
     file_handler.setFormatter(file_format)
 
-    # Add handlers to the logger
     logger.addHandler(stream_handler)
-#    logger.addHandler(file_handler)
+    logger.addHandler(file_handler)
 
     logger.setLevel(logging.DEBUG)
 
-# DEBUG
-# INFO
-# WARNING
-# ERROR
-# CRITICAL
-    logger.debug("DEBUG")
-    logger.info("INFO")
-    logger.warning("WARNING")
-    logger.error("ERROR")
-    logger.critical("CRITICAL")
 
 def main():
     args = parse_args()
 
-    print(f'args.verbose: {args.verbose}')
     set_up_logging(audit_log="audit.log", verbose=args.verbose)
 
-#    logger = logging.getLogger(__name__)
-#    logger.debug("DEBUG")
-#    logger.error("ERROR")
-#    logger.info("INFO")
-#    logger.error("ERROR")
-    return
+    logger = logging.getLogger(__name__)
+
     # Set these variables from argument
     ticker = "MSFT"
     weight = 0.50
@@ -81,8 +66,9 @@ def main():
     msg_rate_p_sec = 5
     verbose = args.verbose
 
+    # Write everything to DEBUG
+    # Write what I want to see on stdout to INFO
     start_time = datetime.now()
-
     # print(f'Start time: {start_time}')
 
     watch_list = [
@@ -99,52 +85,48 @@ def main():
         msg_rate_p_sec=msg_rate_p_sec,
         start_time=start_time,
     )
-    sep_len = 100
-    if verbose:
-        print_line("=", "=", sep_len)
-        print_line("=", "=", sep_len)
-        print("Initial Order Book\n")
-        generator._orderbook.print_order_book(ticker)
+    sep_len = 89
+    logger.debug(get_line("=", "=", sep_len))
+    logger.debug(get_line("=", "=", sep_len))
 
-    f_ascii = open("orders.log", "w")
+    logger.debug("Initial Order Book\n")
+    logger.debug(generator._orderbook.get_order_book(ticker))
+
+    #f_ascii = open("orders.log", "w")
     f_bin = open("orders.dat", "wb")
 
     for i in range(num_of_msgs):
-        if verbose:
-            print_line(" ", " ")
-            print_line(" ", " ")
+        logger.debug(get_line(" ", " "))
+        logger.debug(get_line(" ", " "))
         new_msg = generator.getNextMsg()
 
-        if verbose:
-            print_line("=", "=", sep_len)
-        print_line("=", "=", sep_len)
-        print(f"Message #{i+1}:    {new_msg}")
+        logger.debug(get_line("=", "=", sep_len))
+        logger.info(get_line("=", "=", sep_len))
+        logger.info(f"Message #{i+1}:    {new_msg}")
         new_msg_bytes = new_msg.get_bytes()
         new_msg_bytes_str = ", ".join(["0x" + str(x) for x in new_msg_bytes])
-        if verbose:
-            print(f"bytes:\n\t{new_msg_bytes_str}")
+        logger.debug(f"bytes:\n\t{new_msg_bytes_str}")
 
-        f_ascii.write(f"{str(new_msg)}\n")
+        logger.debug(f"{str(new_msg)}\n")
         f_bin.write(new_msg.get_bytes())
 
-        if verbose:
-            print_line(" ", " ")
-            generator._orderbook.print_order_book(ticker)
+        logger.debug(get_line(" ", " "))
+        logger.debug(generator._orderbook.get_order_book(ticker))
 
-    f_ascii.close()
+    #f_ascii.close()
     f_bin.close()
 
-    print_line(" ", " ")
-    print_line(" ", " ")
-    print_line("=", "=", sep_len)
-    print("Final OrderBook")
-    print_line("=", "=", sep_len)
-    print_line(" ", " ")
-    print_line(" ", " ")
-    generator._orderbook.print_order_book(ticker)
-    print_line(" ", " ")
-    print_line(" ", " ")
-    print_line("=", "=", sep_len)
+    #logger.info(get_line(" ", " "))
+    #logger.info(get_line(" ", " "))
+    logger.info(get_line("=", "=", sep_len))
+    logger.info(get_form("Final OrderBook"))
+    logger.info(get_line("=", "=", sep_len))
+    logger.info(get_line(" ", " "))
+    logger.info(get_line(" ", " "))
+    logger.info(generator._orderbook.get_order_book(ticker))
+    logger.info(get_line(" ", " "))
+    logger.info(get_line(" ", " "))
+    logger.info(get_line("=", "=", sep_len))
 
 
 if __file__ == "__main__":

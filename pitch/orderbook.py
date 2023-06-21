@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import List
-from .util import print_line, print_form
+from .util import get_line, get_line_ln, print_line, get_form, get_form_ln, print_form
 
 
 class Side(Enum):
@@ -108,36 +108,42 @@ class OrderBook:
         return self._orderbook[ticker][side]
 
     def print_order_book(self, ticker: str):
+        print(get_order_book(ticker))
+
+    def get_order_book(self, ticker: str) -> str:
+        ss = ""
         display_width = 60
 
-        print_line("-", "+")
-        print_form(f"OrderBook for {ticker}")
-        print_line("-", "+")
+        ss += get_line_ln("-", "+")
+        ss += get_form_ln(f"OrderBook for {ticker}")
+        ss += get_line_ln("-", "+")
 
         buy_orders = self.get_orders(ticker=ticker, side=Side.Buy)
         if len(buy_orders) == 0:
-            print_line(" ", "|")
+            ss += get_line_ln(" ", "|")
             no_buys_msg = "No Buy Orders"
-            print_form(f"{no_buys_msg}")
-            print_line(" ", "|")
-            print_line("-", "+")
+            ss += get_form_ln(f"{no_buys_msg}")
+            ss += get_line_ln(" ", "|")
+            ss += get_line_ln("-", "+")
         else:
             for buy in buy_orders:
                 padding_len = display_width - len(str(buy)) - 8
                 padding = " " * padding_len
-                print_form(f"Buy: {buy}")
-            print_line("-", "+")
+                ss += get_form_ln(f"Buy: {buy}")
+            ss += get_line_ln("-", "+")
 
         sell_orders = self.get_orders(ticker=ticker, side=Side.Sell)
         if len(sell_orders) == 0:
             no_sells_msg = "No Sell Orders"
-            print_line(" ", "|")
-            print_form(f"{no_sells_msg}")
-            print_line(" ", "|")
-            print_line("-", "+")
+            ss += get_line_ln(" ", "|")
+            ss += get_form_ln(f"{no_sells_msg}")
+            ss += get_line_ln(" ", "|")
+            ss += get_line_ln("-", "+")
         else:
             for sell in sell_orders:
                 padding_len = display_width - len(str(sell)) - 8
                 padding = " " * padding_len
-                print_form(f"Sell: {sell}")
-            print_line("-", "+")
+                ss += get_form_ln(f"Sell: {sell}")
+            ss += get_line_ln("-", "+")
+
+        return ss
