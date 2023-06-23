@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List, Tuple, Any
 from enum import Enum
+import logging
 import numpy as np
 from numpy import ndarray
 
@@ -10,9 +11,10 @@ from .modify import ModifyOrderShort, ModifyOrderLong
 from .order_executed import OrderExecuted, OrderExecutedAtPriceSize
 from .orderbook import OrderBook, Side
 from .reduce_size import ReduceSizeLong, ReduceSizeShort
-from .trade import TradeLong, TradeShort, TradeExpanded
 from .time import Time
+from .trade import TradeLong, TradeShort, TradeExpanded
 
+logger = logging.getLogger(__name__)
 
 class WatchListItem:
     def __init__(
@@ -295,13 +297,14 @@ class Generator(object):
         if self._orderbook.has_ticker(ticker=ticker) is False:
             raise Exception(f'Invalid Ticker "{ticker}" (not in OrderBook)')
 
+        logger.debug(f'MsgType.Add')
         # Is book too small?
         if (
             len(self._orderbook.get_orders(ticker=ticker, side=side))
             < self._watch_list[ticker][side].book_size_range[0]
         ):
             # We want an Add
-            # print(f'MsgType.Add')
+            logger.debug(f'MsgType.Add')
             return Generator.MsgType.Add
         # Is book too big?
         elif (
@@ -541,6 +544,7 @@ class Generator(object):
         elif new_msg_cat == Generator.MsgType.Remove:
             # Pick an existing order
             random_order = self._pickRandomOrder(ticker=ticker, side=side)
+            random_order_side = "B" if side == Side.Buy else "S"
 
             print(f"Removing an existing order via {new_msg_cat}")
             self._orderbook.delete_order(
@@ -570,7 +574,7 @@ class Generator(object):
                 return TradeShort.from_parms(
                     time_offset=new_timestamp,
                     order_id=random_order._order_id,
-                    side=random_order._side,
+                    side=random_order_side,
                     quantity=random_order._quantity,
                     symbol=random_order._ticker,
                     price=random_order._price,
@@ -580,7 +584,7 @@ class Generator(object):
                 return TradeLong.from_parms(
                     time_offset=new_timestamp,
                     order_id=random_order._order_id,
-                    side=random_order._side,
+                    side=random_order_side,
                     quantity=random_order._quantity,
                     symbol=random_order._ticker,
                     price=random_order._price,
@@ -590,7 +594,7 @@ class Generator(object):
                 return TradeExpanded.from_parms(
                     time_offset=new_timestamp,
                     order_id=random_order._order_id,
-                    side=random_order._side,
+                    side=random_order_side,
                     quantity=random_order._quantity,
                     symbol=random_order._ticker,
                     price=random_order._price,
@@ -600,14 +604,8 @@ class Generator(object):
                 raise Exception("Invalid msg_type")
 
     def getNextMsg(self):
-        """ """
-        # TODO: Check if we have to return a Time message
-        #   - We send a new Time message whenever a new second
-        #      Number of whole seconds from midnight Eastern Time
-        #   - Use self._msg_rate_p_sec to keep track of current
-        #      message time
-        #  _current_base_time = 9:30:00 AM
-        #  _current_time_offset = 5_000 milliseconds
+        """
+        """
         if self._isTimeMsgNeeded():
             return self._getTimeMessage()
 

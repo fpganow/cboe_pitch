@@ -17,7 +17,7 @@ def get_form(line: str) -> str:
     line_len = len(line)
     padding_len = 80 - (line_len + 4)
     padding = " " * padding_len
-    return f"| {line}{padding} |\n"
+    return f"| {line}{padding} |"
 
 def print_form(line: str):
     print(get_form(line))

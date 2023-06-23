@@ -1,3 +1,11 @@
+#
+# TODO:
+#  - make one random number generator seed and allow it to be overriden by constructor arg
+#  - Find bug when trying to encode 'Side'
+#     pitch24.py line 87
+#  - Add trace logging to Generator messages
+#  - Add support for Sequenced Unit Header
+
 import argparse
 from datetime import datetime
 import logging
@@ -17,6 +25,9 @@ def parse_args() -> Any:
         "-v", "--verbose", default=False, action="store_true", help="Verbose"
     )
     parser.add_argument(
+        "-d", "--debug", default=False, action="store_true", help="Debug"
+    )
+    parser.add_argument(
         "-n", "--num-of-msgs", default=10, help="Number of Messages to Generate"
     )
     parser.add_argument(
@@ -26,27 +37,34 @@ def parse_args() -> Any:
     return parser.parse_args()
 
 
-def set_up_logging(audit_log: str, verbose: bool) -> None:
-    logger = logging.getLogger(__name__)
+def set_up_logging(audit_log: str, trace_log: str, verbose: bool, debug: bool) -> None:
+    logger = logging.getLogger()
 
     # Create handlers
     stream_handler = logging.StreamHandler()
     if verbose:
         print(f'verbose: {verbose}')
-        stream_handler.setLevel(logging.DEBUG)
-    else:
         stream_handler.setLevel(logging.INFO)
+    else:
+        stream_handler.setLevel(logging.WARN)
 
     stream_format = logging.Formatter('%(message)s')
     stream_handler.setFormatter(stream_format)
+    logger.addHandler(stream_handler)
 
     file_handler = logging.FileHandler(audit_log, mode='w')
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(logging.INFO)
     file_format = logging.Formatter('%(message)s')
     file_handler.setFormatter(file_format)
-
-    logger.addHandler(stream_handler)
     logger.addHandler(file_handler)
+
+    if debug:
+        print(f'debug: {debug}')
+        trace_handler = logging.FileHandler(trace_log, mode='w')
+        trace_format = logging.Formatter('%(message)s')
+        trace_handler.setFormatter(trace_format)
+        trace_handler.setLevel(logging.DEBUG)
+        logger.addHandler(trace_handler)
 
     logger.setLevel(logging.DEBUG)
 
@@ -54,7 +72,7 @@ def set_up_logging(audit_log: str, verbose: bool) -> None:
 def main():
     args = parse_args()
 
-    set_up_logging(audit_log="audit.log", verbose=args.verbose)
+    set_up_logging(audit_log="audit.log", trace_log='trace_log', verbose=args.verbose, debug=args.debug)
 
     logger = logging.getLogger(__name__)
 
@@ -69,7 +87,7 @@ def main():
     # Write everything to DEBUG
     # Write what I want to see on stdout to INFO
     start_time = datetime.now()
-    # print(f'Start time: {start_time}')
+    logger.info(f'Start time: {start_time}')
 
     watch_list = [
         WatchListItem(
@@ -84,49 +102,57 @@ def main():
         watch_list=watch_list,
         msg_rate_p_sec=msg_rate_p_sec,
         start_time=start_time,
+        seed=1_000
     )
     sep_len = 89
-    logger.debug(get_line("=", "=", sep_len))
-    logger.debug(get_line("=", "=", sep_len))
+    logger.info(get_line("=", "=", sep_len))
+    logger.info(get_line("=", "=", sep_len))
 
-    logger.debug("Initial Order Book\n")
-    logger.debug(generator._orderbook.get_order_book(ticker))
+    logger.info("Initial Order Book\n")
+    logger.info(generator._orderbook.get_order_book(ticker))
 
-    #f_ascii = open("orders.log", "w")
     f_bin = open("orders.dat", "wb")
 
     for i in range(num_of_msgs):
-        logger.debug(get_line(" ", " "))
-        logger.debug(get_line(" ", " "))
+        logger.info(get_line(" ", " "))
+        logger.info(get_line(" ", " "))
         new_msg = generator.getNextMsg()
 
-        logger.debug(get_line("=", "=", sep_len))
         logger.info(get_line("=", "=", sep_len))
-        logger.info(f"Message #{i+1}:    {new_msg}")
+        logger.warn(get_line("=", "=", sep_len))
+        logger.warn(f"Message #{i+1}:    {new_msg}")
         new_msg_bytes = new_msg.get_bytes()
         new_msg_bytes_str = ", ".join(["0x" + str(x) for x in new_msg_bytes])
-        logger.debug(f"bytes:\n\t{new_msg_bytes_str}")
+        logger.info(f"bytes:\n\t{new_msg_bytes_str}")
 
-        logger.debug(f"{str(new_msg)}\n")
+        logger.info(f"{str(new_msg)}\n")
         f_bin.write(new_msg.get_bytes())
 
-        logger.debug(get_line(" ", " "))
-        logger.debug(generator._orderbook.get_order_book(ticker))
+        logger.info(get_line(" ", " "))
+        logger.info(generator._orderbook.get_order_book(ticker))
 
-    #f_ascii.close()
     f_bin.close()
 
-    #logger.info(get_line(" ", " "))
-    #logger.info(get_line(" ", " "))
-    logger.info(get_line("=", "=", sep_len))
-    logger.info(get_form("Final OrderBook"))
-    logger.info(get_line("=", "=", sep_len))
-    logger.info(get_line(" ", " "))
-    logger.info(get_line(" ", " "))
-    logger.info(generator._orderbook.get_order_book(ticker))
-    logger.info(get_line(" ", " "))
-    logger.info(get_line(" ", " "))
-    logger.info(get_line("=", "=", sep_len))
+    logger.warn(get_line("-", "+"))
+    logger.warn(get_form("Final OrderBook"))
+    logger.warn(get_line("-", "+"))
+
+    logger.warn(get_line(" ", "|"))
+    logger.warn(get_line(" ", "|"))
+    logger.warn(generator._orderbook.get_order_book(ticker))
+    logger.warn(get_line(" ", "|"))
+    logger.warn(get_line(" ", "|"))
+    logger.warn(get_line("-", "+"))
+    logger.warn(get_form("Statistics"))
+    logger.warn(get_line("-", "+"))
+    logger.warn(get_line(" ", "|"))
+    logger.warn(get_line(" ", "|"))
+    # TODO: Print statistics on types of messages, to be used by parser
+    #       as a sanity check
+    #logger.warn(get_form(" - Total Number of Messages: 10"))
+    #logger.warn(get_form(" - # of AddOrderShort: 10"))
+    logger.warn(get_line(" ", "|"))
+    logger.warn(get_line("-", "+"))
 
 
 if __file__ == "__main__":

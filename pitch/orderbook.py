@@ -146,4 +146,4 @@ class OrderBook:
                 ss += get_form_ln(f"Sell: {sell}")
             ss += get_line_ln("-", "+")
 
-        return ss
+        return ss[:-1]
