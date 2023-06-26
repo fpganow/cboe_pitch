@@ -1,10 +1,11 @@
 #
 # TODO:
-#  - make one random number generator seed and allow it to be overriden by constructor arg
 #  - Find bug when trying to encode 'Side'
 #     pitch24.py line 87
 #  - Add trace logging to Generator messages
 #  - Add support for Sequenced Unit Header
+#  - Generate binary file with binary BATS messages in orders.bin
+#  - Add mode to read binary orders.data and output all messages in ASCII form
 
 import argparse
 from datetime import datetime
@@ -31,7 +32,7 @@ def parse_args() -> Any:
         "-n", "--num-of-msgs", default=10, help="Number of Messages to Generate"
     )
     parser.add_argument(
-        "-o", "--output-file", default="pitch24.dat", help="Specify output file"
+        "-o", "--output-file", default="pitch24.bin", help="Specify output file"
     )
 
     return parser.parse_args()
@@ -83,6 +84,7 @@ def main():
     book_size_range = (1, 3)
     msg_rate_p_sec = 5
     verbose = args.verbose
+    output_file = args.output_file
 
     # Write everything to DEBUG
     # Write what I want to see on stdout to INFO
@@ -111,7 +113,7 @@ def main():
     logger.info("Initial Order Book\n")
     logger.info(generator._orderbook.get_order_book(ticker))
 
-    f_bin = open("orders.dat", "wb")
+    f_bin = open(output_file, "wb")
 
     for i in range(num_of_msgs):
         logger.info(get_line(" ", " "))

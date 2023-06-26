@@ -6,5 +6,5 @@ dist
 *.egg-info
 Session.vim
 vent_wsl
-orders.dat
-orders.log
+*.dat
+*.log

@@ -242,7 +242,7 @@ class Generator(object):
                 return list1[idx]
         return list1[-1]
 
-    def _pickTicker(self) -> str:
+    def _pickTicke(self) -> str:
         if len(self._watch_list.items()) == 1:
             return self._watch_list[list(self._watch_list.keys())[0]][Side.Buy].ticker
         return self.rchoose(
