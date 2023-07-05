@@ -17,7 +17,7 @@ class SequencedUnitHeader(MessageBase):
                                                   header.
     """
 
-    def __init__(self, hdr_count: int = 0, hdr_unit: int = 1, hdr_sequence: int = 1):
+    def __init__(self, hdr_sequence: int = 1):
         self._field_specs: OrderedDict[FieldName, FieldSpec] = collections.OrderedDict()
         self._field_specs[FieldName.HdrLength] = FieldSpec(
             field_name=FieldName.HdrLength,
@@ -45,6 +45,40 @@ class SequencedUnitHeader(MessageBase):
         )
 
         self._field_specs[FieldName.HdrLength].value(8)
-        self._field_specs[FieldName.HdrCount].value(hdr_count)
-        self._field_specs[FieldName.HdrUnit].value(hdr_unit)
+        self._field_specs[FieldName.HdrCount].value(0)
+        self._field_specs[FieldName.HdrUnit].value(1)
         self._field_specs[FieldName.HdrSequence].value(hdr_sequence)
+
+        self._messages = []
+
+    def hdr_length(self, hdr_length: int = None) -> int:
+        if hdr_length is not None:
+            self._field_specs[FieldName.HdrLength].value(hdr_length)
+        return self._field_specs[FieldName.HdrLength].value()
+
+    def hdr_count(self, hdr_count: int = None) -> int:
+        if hdr_count is not None:
+            self._field_specs[FieldName.HdrCount].value(hdr_count)
+        return self._field_specs[FieldName.HdrCount].value()
+
+    def getNextSequence(self) -> int:
+        return self._field_specs[FieldName.HdrSequence].value() + len(self._messages)
+
+    def addMessage(self, new_msg: MessageBase) -> None:
+        self._messages.append(new_msg)
+        self.hdr_length(hdr_length=self.hdr_length() + new_msg.length())
+        self.hdr_count(hdr_count=self.hdr_count() + 1)
+
+    def getLength(self) -> int:
+        total_length = 8
+        for msg in self._messages:
+            total_length += msg.length()
+        return total_length
+
+    def __str__(self) -> str:
+        pretty_msg_type = str(type(self)).split(".")[-1][:-2]
+        msg_str = f"({pretty_msg_type}, "
+        msg_str += f'HdrLength={self.hdr_length()}, '
+        msg_str += f'HdrCount={self.hdr_count()}'
+        msg_str += ")"
+        return msg_str

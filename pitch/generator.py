@@ -61,6 +61,10 @@ class WatchListItem:
     def size_range(self):
         return self._size_range
 
+    def __str__(self):
+        return (f'({self._ticker}, weight: {self._weight}, book size: {self._book_size_range}' +
+                f', price range: {self._price_range}, size range: {self._size_range})')
+
 
 class Generator(object):
     """ """
@@ -236,13 +240,12 @@ class Generator(object):
 
         # testing which interval the uniform random number falls in
         random_number = np.random.uniform(0, 1)
-        print(f"random_number: {random_number}")
         for idx, w in enumerate(weights_normalized[:-1]):
             if random_number <= w:
                 return list1[idx]
         return list1[-1]
 
-    def _pickTicke(self) -> str:
+    def _pickTicker(self) -> str:
         if len(self._watch_list.items()) == 1:
             return self._watch_list[list(self._watch_list.keys())[0]][Side.Buy].ticker
         return self.rchoose(
@@ -605,6 +608,7 @@ class Generator(object):
 
     def getNextMsg(self):
         """
+        Get next non-Sequenced Unit Header Message.
         """
         if self._isTimeMsgNeeded():
             return self._getTimeMessage()
@@ -626,3 +630,21 @@ class Generator(object):
         )
         # 6 - Return new order
         return next_msg
+
+    def getNextSeq(self, num_of_messages: int = None):
+        """
+        Get a Sequenced Unit Header, along with all messages
+        that belong to it.
+
+        num_messages
+
+        num_bytes
+
+        """
+
+        # generate a message
+        # Check if num_messages matches
+        # Check if new size if within bounds
+        # update Seq Unit Header
+        # return list
+        pass
