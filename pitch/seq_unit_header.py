@@ -1,6 +1,7 @@
 import collections
-from typing import OrderedDict
+from typing import ByteString, List, OrderedDict
 
+from pitch.message_factory import MessageFactory
 from pitch.pitch24 import MessageBase, FieldName, FieldSpec, FieldType
 
 
@@ -39,7 +40,7 @@ class SequencedUnitHeader(MessageBase):
         )
         self._field_specs[FieldName.HdrSequence] = FieldSpec(
             field_name=FieldName.HdrSequence,
-            offset=3,
+            offset=4,
             length=4,
             field_type=FieldType.Binary,
         )
@@ -51,6 +52,45 @@ class SequencedUnitHeader(MessageBase):
 
         self._messages = []
 
+    @staticmethod
+    def from_bytestream(msg_bytes: ByteString) -> 'SequencedUnitHeader':
+        # Read in Sequenced Unit Header
+        seq_unit_hdr_bytes = msg_bytes[:8]
+
+        seq_unit_hdr = SequencedUnitHeader()
+        for idx, field_spec in enumerate(seq_unit_hdr._field_specs.values()):
+            field_spec.fill_value(seq_unit_hdr_bytes)
+
+        # Save Header Values
+        old_hdr_count = seq_unit_hdr.hdr_count()
+        old_hdr_length = seq_unit_hdr.hdr_length()
+        seq_unit_hdr.hdr_count(0)
+        seq_unit_hdr.hdr_length(8)
+
+        # Remaining Bytes
+        rem_bytes = msg_bytes[8:]
+
+        while True:
+            # Chop off a single message
+            next_msg_len = rem_bytes[0]
+            next_msg_bytes = rem_bytes[:next_msg_len]
+            next_msg = MessageFactory.from_bytes(next_msg_bytes)
+            print(f'next_msg: {next_msg}')
+            seq_unit_hdr.addMessage(next_msg)
+
+            # Is final message?
+            if len(next_msg_bytes) == len(rem_bytes) or old_hdr_length == seq_unit_hdr.hdr_length():
+                break
+            else:
+                # Chop off message that was just parsed
+                rem_bytes = rem_bytes[next_msg_len:]
+
+        rem_data = None
+        if seq_unit_hdr.hdr_length() < len(msg_bytes):
+            rem_data = msg_bytes[seq_unit_hdr.hdr_length():]
+
+        return [seq_unit_hdr, rem_data]
+
     def hdr_length(self, hdr_length: int = None) -> int:
         if hdr_length is not None:
             self._field_specs[FieldName.HdrLength].value(hdr_length)
@@ -61,6 +101,16 @@ class SequencedUnitHeader(MessageBase):
             self._field_specs[FieldName.HdrCount].value(hdr_count)
         return self._field_specs[FieldName.HdrCount].value()
 
+    def hdr_unit(self, hdr_unit: int = None) -> int:
+        if hdr_unit is not None:
+            self._field_specs[FieldName.HdrUnit].value(hdr_unit)
+        return self._field_specs[FieldName.HdrUnit].value()
+
+    def hdr_sequence(self, hdr_sequence: int = None) -> int:
+        if hdr_sequence is not None:
+            self._field_specs[FieldName.HdrSequence].value(hdr_sequence)
+        return self._field_specs[FieldName.HdrSequence].value()
+
     def getNextSequence(self) -> int:
         return self._field_specs[FieldName.HdrSequence].value() + len(self._messages)
 
@@ -68,6 +118,9 @@ class SequencedUnitHeader(MessageBase):
         self._messages.append(new_msg)
         self.hdr_length(hdr_length=self.hdr_length() + new_msg.length())
         self.hdr_count(hdr_count=self.hdr_count() + 1)
+
+    def getMessages(self) -> List[MessageBase]:
+        return self._messages
 
     def getLength(self) -> int:
         total_length = 8

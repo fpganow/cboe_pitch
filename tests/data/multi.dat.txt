@@ -1,0 +1,18 @@
+Offset=0x0: (SequencedUnitHeader, HdrLength=66, HdrCount=3)
+DEBUG: bytes: 0x42, 0x0, 0x3, 0x1, 0x1, 0x0, 0x0, 0x0
+         - Offset=0x8: (Time, 68,254)
+         - Offset=0xe: (AddOrderShort, 0, ORID0001, B, 5, MSFT, $332.08)
+         - Offset=0x28: (AddOrderShort, 200,000,000, ORID0002, B, 125, GE, $51.91)
+Offset=0x42: (SequencedUnitHeader, HdrLength=76, HdrCount=2)
+DEBUG: bytes: 0x4c, 0x0, 0x2, 0x1, 0x4, 0x0, 0x0, 0x0
+         - Offset=0x4a: (AddOrderLong, 400,000,000, ORID0003, B, 30, MSFT, $331.03)
+         - Offset=0x6c: (AddOrderLong, 600,000,000, ORID0004, S, 5, MSFT, $323.8)
+Offset=0x8e: (SequencedUnitHeader, HdrLength=82, HdrCount=3)
+DEBUG: bytes: 0x52, 0x0, 0x3, 0x1, 0x6, 0x0, 0x0, 0x0
+         - Offset=0x96: (AddOrderLong, 800,000,000, ORID0005, B, 30, MSFT, $325.61)
+         - Offset=0xb8: (Time, 68,255)
+         - Offset=0xbe: (AddOrderLong, 0, ORID0006, S, 150, GE, $58.99)
+Offset=0xe0: (SequencedUnitHeader, HdrLength=76, HdrCount=2)
+DEBUG: bytes: 0x4c, 0x0, 0x2, 0x1, 0x9, 0x0, 0x0, 0x0
+         - Offset=0xe8: (AddOrderLong, 200,000,000, ORID0007, S, 150, GE, $54.47)
+         - Offset=0x10a: (AddOrderLong, 400,000,000, ORID0008, S, 100, GE, $53.21)

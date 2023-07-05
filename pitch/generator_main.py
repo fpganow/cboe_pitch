@@ -2,8 +2,6 @@
 # TODO:
 #  - Find bug when trying to encode 'Side'
 #     pitch24.py line 87
-#  - Add trace logging to Generator messages
-#  - Add support for Sequenced Unit Header
 #  - Generate binary file with binary BATS messages in orders.bin
 #  - Add mode to read binary orders.data and output all messages in ASCII form
 
@@ -23,7 +21,7 @@ sep_len = 89
 def parse_args() -> Any:
     parser = argparse.ArgumentParser(
         prog="PITCH.Generator",
-        description="PITCH Message Generator and Parser",
+        description="PITCH Message Generator",
         epilog="Bottom of help text",
     )
     parser.add_argument(
@@ -157,9 +155,34 @@ def main():
     if seq_unit_hdr.hdr_count() > 0:
         seq_unit_array.append(seq_unit_hdr)
 
-    # Write out messages
+    # Write Generated Messages
+    # TODO: Write out messages in binary format
+    #       and echo to screen
+    #       and for trace show orderbook
+    f_bin = open(config.output_file(), "wb")
+
     for seq_unit_hdr in seq_unit_array:
-        print(f'seq_unit_hdr.hdr_count(): {seq_unit_hdr.hdr_count()}')
+        logger.info(get_line(" ", " "))
+        logger.info(get_line(" ", " "))
+
+        # Print Sequenced Unit Header info
+        file_offset = f_bin.tell()
+        print(f'Offset={str(hex(file_offset))}: {seq_unit_hdr}')
+
+        # Write Sequenced Unit Header to file
+        new_msg_bytes = seq_unit_hdr.get_bytes()
+        new_msg_bytes_str = ", ".join([str(hex(x)) for x in new_msg_bytes])
+        print(f'DEBUG: bytes: {new_msg_bytes_str}')
+        f_bin.write(new_msg_bytes)
+
+        for message in seq_unit_hdr.getMessages():
+            # Print one-liner for each message in Sequenced Unit Header, including file offset
+            file_offset = f_bin.tell()
+            logger.warn(f'\t - Offset={str(hex(file_offset))}: {message}')
+            # Print each message to file
+            f_bin.write(message.get_bytes())
+
+    f_bin.close()
 
 #    for i in range(num_of_msgs):
 #        logger.info(get_line(" ", " "))
@@ -178,8 +201,6 @@ def main():
 #
 #        logger.info(get_line(" ", " "))
 #        logger.info(generator._orderbook.get_order_book(ticker))
-#
-#    f_bin.close()
 #
 #    logger.warn(get_line("-", "+"))
 #    logger.warn(get_form("Final OrderBook"))
