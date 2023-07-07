@@ -82,20 +82,39 @@ class TestSequencedUnitHeader(TestCase):
         full_path = pkg_resources.resource_filename(__name__, data_path)
         in_bytes = Path(full_path).read_bytes()
 
-        # WHEN
-        [seq_unit_hdr, rem_bytes] = SequencedUnitHeader.from_bytestream(msg_bytes=in_bytes)
-        new_msgs = seq_unit_hdr.getMessages()
+        # WHEN - Parse 1st Sequenced Unit Header
+        [seq_unit_hdr_1, rem_bytes] = SequencedUnitHeader.from_bytestream(msg_bytes=in_bytes)
+        new_msgs = seq_unit_hdr_1.getMessages()
 
         # THEN
         assert_that(rem_bytes, not(equal_to(None)))
-        assert_that(rem_bytes, has_length(len(in_bytes) - seq_unit_hdr.hdr_length()))
+        assert_that(rem_bytes, has_length(len(in_bytes) - seq_unit_hdr_1.hdr_length()))
 
-        assert_that(seq_unit_hdr.hdr_length(), equal_to(0x42))
-        assert_that(seq_unit_hdr.hdr_count(), equal_to(3))
-        assert_that(seq_unit_hdr.hdr_unit(), equal_to(1))
-        assert_that(seq_unit_hdr.hdr_sequence(), equal_to(1))
+        assert_that(seq_unit_hdr_1.hdr_length(), equal_to(0x42))
+        assert_that(seq_unit_hdr_1.hdr_count(), equal_to(3))
+        assert_that(seq_unit_hdr_1.hdr_unit(), equal_to(1))
+        assert_that(seq_unit_hdr_1.hdr_sequence(), equal_to(1))
 
         assert_that(new_msgs, has_length(3))
         assert_that(new_msgs[0], instance_of(Time))
         assert_that(new_msgs[1], instance_of(AddOrderShort))
         assert_that(new_msgs[2], instance_of(AddOrderShort))
+
+        # WHEN - Parse 2nd Sequenced Unit Header
+        [seq_unit_hdr_2, rem_bytes] = SequencedUnitHeader.from_bytestream(msg_bytes=rem_bytes)
+        new_msgs = seq_unit_hdr_2.getMessages()
+
+        # THEN
+        assert_that(rem_bytes, not(equal_to(None)))
+        assert_that(rem_bytes, has_length(len(in_bytes) - (
+                        seq_unit_hdr_1.hdr_length() + seq_unit_hdr_2.hdr_length() )
+                        ))
+
+        assert_that(seq_unit_hdr_2.hdr_length(), equal_to(0x4c))
+        assert_that(seq_unit_hdr_2.hdr_count(), equal_to(2))
+        assert_that(seq_unit_hdr_2.hdr_unit(), equal_to(1))
+        assert_that(seq_unit_hdr_2.hdr_sequence(), equal_to(4))
+
+        assert_that(new_msgs, has_length(2))
+        assert_that(new_msgs[0], instance_of(AddOrderLong))
+        assert_that(new_msgs[0], instance_of(AddOrderLong))
