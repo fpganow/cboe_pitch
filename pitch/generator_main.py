@@ -2,19 +2,18 @@
 # TODO:
 #  - Find bug when trying to encode 'Side'
 #     pitch24.py line 87
-#  - Generate binary file with binary BATS messages in orders.bin
-#  - Add mode to read binary orders.data and output all messages in ASCII form
 
 import argparse
-from datetime import datetime
 import logging
+import sys
+from datetime import datetime
 from pathlib import Path
+from typing import Any
+
 from pitch.generator import Generator, WatchListItem
 from pitch.seq_unit_header import SequencedUnitHeader
-import sys
-from typing import Any
 from .config import Config
-from .util import get_line, print_line, get_form, print_form
+from .util import get_line, get_form
 
 sep_len = 89
 

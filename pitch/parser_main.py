@@ -1,14 +1,9 @@
 import argparse
-from datetime import datetime
 import logging
-from pathlib import Path
-from pitch.file_parser import FileParser
-from pitch.generator import Generator, WatchListItem
-from pitch.seq_unit_header import SequencedUnitHeader
-import sys
 from typing import Any
-from .config import Config
-from .util import get_line, print_line, get_form, print_form
+
+from pitch.file_parser import FileParser
+from .util import get_line, get_form
 
 sep_len = 89
 

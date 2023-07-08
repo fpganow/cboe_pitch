@@ -1,11 +1,9 @@
 import collections
-from typing import Any, ByteString, OrderedDict, Union
-from enum import Enum
-
-from datetime import datetime
-import time
-
 import logging
+import time
+from datetime import datetime
+from enum import Enum
+from typing import Any, ByteString, OrderedDict
 
 logger = logging.getLogger(__name__)
 

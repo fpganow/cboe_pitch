@@ -1,9 +1,9 @@
-from datetime import datetime, timedelta
-from typing import List, Tuple, Any
-from enum import Enum
 import logging
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import List, Tuple, Any
+
 import numpy as np
-from numpy import ndarray
 
 from .add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
 from .delete_order import DeleteOrder
