@@ -4,15 +4,11 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from hamcrest import (
-    any_of,
     assert_that,
     equal_to,
     has_length,
-    is_,
     is_in,
-    greater_than,
     greater_than_or_equal_to,
-    less_than,
     less_than_or_equal_to,
     all_of,
     instance_of,
@@ -20,15 +16,13 @@ from hamcrest import (
 )
 
 from pitch import ModifyOrderLong, TradeLong
-from pitch.generator import Generator
-
-from pitch.add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
+from pitch.add_order import AddOrderLong, AddOrderShort
 from pitch.delete_order import DeleteOrder
-from pitch.order_executed import OrderExecuted, OrderExecutedAtPriceSize
-from pitch.orderbook import Side
-from pitch.reduce_size import ReduceSizeLong, ReduceSizeShort
-
+from pitch.generator import Generator
 from pitch.generator import WatchListItem
+from pitch.order_executed import OrderExecutedAtPriceSize
+from pitch.orderbook import Side
+from pitch.reduce_size import ReduceSizeLong
 
 
 def setupTest(

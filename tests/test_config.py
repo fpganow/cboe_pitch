@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from hamcrest import assert_that, has_key, has_length, is_, equal_to, instance_of
+from hamcrest import assert_that, has_key, has_length, equal_to
 
 from pitch.config import Config
 

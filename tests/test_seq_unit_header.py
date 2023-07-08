@@ -1,12 +1,12 @@
+from pathlib import Path
 from unittest import TestCase
 
-from hamcrest import assert_that, has_length, is_, equal_to, instance_of
-
-from pathlib import Path
 import pkg_resources
+from hamcrest import assert_that, has_length, equal_to, instance_of
+
 from pitch.add_order import AddOrderShort
-from pitch.time import Time
 from pitch.seq_unit_header import SequencedUnitHeader
+from pitch.time import Time
 
 
 class TestSequencedUnitHeader(TestCase):
