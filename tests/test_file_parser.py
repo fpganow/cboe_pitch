@@ -15,7 +15,7 @@ class TestFileParser(TestCase):
 
         # WHEN
         with self.assertRaises(Exception):
-            FileParser(file_path=file_path)
+            FileParser.parse_file(file_path=file_path)
 
     def test_parse_multi_seq_unit(self):
 # Output of generator:

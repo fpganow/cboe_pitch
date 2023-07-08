@@ -75,7 +75,6 @@ class SequencedUnitHeader(MessageBase):
             next_msg_len = rem_bytes[0]
             next_msg_bytes = rem_bytes[:next_msg_len]
             next_msg = MessageFactory.from_bytes(next_msg_bytes)
-            print(f'next_msg: {next_msg}')
             seq_unit_hdr.addMessage(next_msg)
 
             # Is final message?

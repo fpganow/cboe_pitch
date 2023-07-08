@@ -3,6 +3,7 @@ import argparse
 from datetime import datetime
 import logging
 from pathlib import Path
+from pitch.file_parser import FileParser
 from pitch.generator import Generator, WatchListItem
 from pitch.seq_unit_header import SequencedUnitHeader
 import sys
@@ -56,11 +57,19 @@ def main():
 
     logger = logging.getLogger(__name__)
 
-
-    logger.warn(get_line("=", "="))
+    logger.warn(get_line("-", "+"))
     logger.warn(get_form(f'Parsing: {args.binary_file}'))
     logger.warn(get_line("-", "+"))
+    logger.warn(get_line(" ", "|"))
 
+    seq_array = FileParser.parse_file(file_path=args.binary_file)
+    for seq_idx, seq in enumerate(seq_array):
+        logger.warn(get_line("-", "+"))
+        logger.warn(get_form(f'[{seq_idx}] SeqUnitHdr: {seq}'))
+        for msg_idx, msg in enumerate(seq.getMessages()):
+            logger.warn(get_form(f'    - [{msg_idx}] {msg}'))
+
+    logger.warn(get_line("-", "+"))
 
 
 if __file__ == "__main__":
