@@ -53,7 +53,7 @@ class SequencedUnitHeader(MessageBase):
         self._messages = []
 
     @staticmethod
-    def from_bytestream(msg_bytes: ByteString) -> 'SequencedUnitHeader':
+    def from_bytestream(msg_bytes: ByteString) -> "SequencedUnitHeader":
         # Read in Sequenced Unit Header
         seq_unit_hdr_bytes = msg_bytes[:8]
 
@@ -78,7 +78,10 @@ class SequencedUnitHeader(MessageBase):
             seq_unit_hdr.addMessage(next_msg)
 
             # Is final message?
-            if len(next_msg_bytes) == len(rem_bytes) or old_hdr_length == seq_unit_hdr.hdr_length():
+            if (
+                len(next_msg_bytes) == len(rem_bytes)
+                or old_hdr_length == seq_unit_hdr.hdr_length()
+            ):
                 break
             else:
                 # Chop off message that was just parsed
@@ -86,7 +89,7 @@ class SequencedUnitHeader(MessageBase):
 
         rem_data = None
         if seq_unit_hdr.hdr_length() < len(msg_bytes):
-            rem_data = msg_bytes[seq_unit_hdr.hdr_length():]
+            rem_data = msg_bytes[seq_unit_hdr.hdr_length() :]
 
         return [seq_unit_hdr, rem_data]
 
@@ -130,7 +133,7 @@ class SequencedUnitHeader(MessageBase):
     def __str__(self) -> str:
         pretty_msg_type = str(type(self)).split(".")[-1][:-2]
         msg_str = f"({pretty_msg_type}, "
-        msg_str += f'HdrLength={self.hdr_length()}, '
-        msg_str += f'HdrCount={self.hdr_count()}'
+        msg_str += f"HdrLength={self.hdr_length()}, "
+        msg_str += f"HdrCount={self.hdr_count()}"
         msg_str += ")"
         return msg_str

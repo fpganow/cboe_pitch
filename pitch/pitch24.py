@@ -120,7 +120,7 @@ class FieldSpec:
             subset = msg_bytes[self.offset() : self.offset() + self.length()]
             value = int.from_bytes(subset, "little")
             self.value(value)
-            #print(f"value: {value} ({hex(value)})")
+            # print(f"value: {value} ({hex(value)})")
         elif self._field_type == FieldType.BinaryLongPrice:
             subset = msg_bytes[self.offset() : self.offset() + self.length()]
             value = int.from_bytes(subset, "little")

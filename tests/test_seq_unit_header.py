@@ -8,15 +8,20 @@ from pitch.add_order import AddOrderShort
 from pitch.time import Time
 from pitch.seq_unit_header import SequencedUnitHeader
 
+
 class TestSequencedUnitHeader(TestCase):
     def setUp(self):
         self._new_msgs = []
-        self._new_msgs.append(AddOrderShort.from_parms(time_offset=100,
-                                            order_id="ORID0100",
-                                            side='B',
-                                            quantity=100,
-                                            symbol='AAPL',
-                                            price=100.25))
+        self._new_msgs.append(
+            AddOrderShort.from_parms(
+                time_offset=100,
+                order_id="ORID0100",
+                side="B",
+                quantity=100,
+                symbol="AAPL",
+                price=100.25,
+            )
+        )
 
     def test_smoke(self):
         # GIVEN
@@ -52,16 +57,21 @@ class TestSequencedUnitHeader(TestCase):
         seq_unit_hdr.addMessage(self._new_msgs[0])
 
         # THEN
-        assert_that(str(seq_unit_hdr), equal_to('(SequencedUnitHeader, HdrLength=34, HdrCount=1)'))
+        assert_that(
+            str(seq_unit_hdr),
+            equal_to("(SequencedUnitHeader, HdrLength=34, HdrCount=1)"),
+        )
 
     def test_parse_single_seq_unit(self):
         # GIVEN
-        data_path = 'data/single_seq.dat'
+        data_path = "data/single_seq.dat"
         full_path = pkg_resources.resource_filename(__name__, data_path)
         in_bytes = Path(full_path).read_bytes()
 
         # WHEN
-        [seq_unit_hdr, rem_bytes] = SequencedUnitHeader.from_bytestream(msg_bytes=in_bytes)
+        [seq_unit_hdr, rem_bytes] = SequencedUnitHeader.from_bytestream(
+            msg_bytes=in_bytes
+        )
         new_msgs = seq_unit_hdr.getMessages()
 
         # THEN
@@ -78,16 +88,18 @@ class TestSequencedUnitHeader(TestCase):
 
     def test_parse_multi_seq_unit(self):
         # GIVEN
-        data_path = 'data/multi.dat'
+        data_path = "data/multi.dat"
         full_path = pkg_resources.resource_filename(__name__, data_path)
         in_bytes = Path(full_path).read_bytes()
 
         # WHEN - Parse 1st Sequenced Unit Header
-        [seq_unit_hdr_1, rem_bytes] = SequencedUnitHeader.from_bytestream(msg_bytes=in_bytes)
+        [seq_unit_hdr_1, rem_bytes] = SequencedUnitHeader.from_bytestream(
+            msg_bytes=in_bytes
+        )
         new_msgs = seq_unit_hdr_1.getMessages()
 
         # THEN
-        assert_that(rem_bytes, not(equal_to(None)))
+        assert_that(rem_bytes, not (equal_to(None)))
         assert_that(rem_bytes, has_length(len(in_bytes) - seq_unit_hdr_1.hdr_length()))
 
         assert_that(seq_unit_hdr_1.hdr_length(), equal_to(0x42))
@@ -101,16 +113,22 @@ class TestSequencedUnitHeader(TestCase):
         assert_that(new_msgs[2], instance_of(AddOrderShort))
 
         # WHEN - Parse 2nd Sequenced Unit Header
-        [seq_unit_hdr_2, rem_bytes] = SequencedUnitHeader.from_bytestream(msg_bytes=rem_bytes)
+        [seq_unit_hdr_2, rem_bytes] = SequencedUnitHeader.from_bytestream(
+            msg_bytes=rem_bytes
+        )
         new_msgs = seq_unit_hdr_2.getMessages()
 
         # THEN
-        assert_that(rem_bytes, not(equal_to(None)))
-        assert_that(rem_bytes, has_length(len(in_bytes) - (
-                        seq_unit_hdr_1.hdr_length() + seq_unit_hdr_2.hdr_length() )
-                        ))
+        assert_that(rem_bytes, not (equal_to(None)))
+        assert_that(
+            rem_bytes,
+            has_length(
+                len(in_bytes)
+                - (seq_unit_hdr_1.hdr_length() + seq_unit_hdr_2.hdr_length())
+            ),
+        )
 
-        assert_that(seq_unit_hdr_2.hdr_length(), equal_to(0x4c))
+        assert_that(seq_unit_hdr_2.hdr_length(), equal_to(0x4C))
         assert_that(seq_unit_hdr_2.hdr_count(), equal_to(2))
         assert_that(seq_unit_hdr_2.hdr_unit(), equal_to(1))
         assert_that(seq_unit_hdr_2.hdr_sequence(), equal_to(4))

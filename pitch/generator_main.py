@@ -18,6 +18,7 @@ from .util import get_line, print_line, get_form, print_form
 
 sep_len = 89
 
+
 def parse_args() -> Any:
     parser = argparse.ArgumentParser(
         prog="PITCH.Generator",
@@ -49,25 +50,25 @@ def set_up_logging(audit_log: str, trace_log: str, verbose: bool, debug: bool) -
     # Create handlers
     stream_handler = logging.StreamHandler()
     if verbose:
-        print(f'verbose: {verbose}')
+        print(f"verbose: {verbose}")
         stream_handler.setLevel(logging.INFO)
     else:
         stream_handler.setLevel(logging.WARN)
 
-    stream_format = logging.Formatter('%(message)s')
+    stream_format = logging.Formatter("%(message)s")
     stream_handler.setFormatter(stream_format)
     logger.addHandler(stream_handler)
 
-    file_handler = logging.FileHandler(audit_log, mode='w')
+    file_handler = logging.FileHandler(audit_log, mode="w")
     file_handler.setLevel(logging.INFO)
-    file_format = logging.Formatter('%(message)s')
+    file_format = logging.Formatter("%(message)s")
     file_handler.setFormatter(file_format)
     logger.addHandler(file_handler)
 
     if debug:
-        print(f'debug: {debug}')
-        trace_handler = logging.FileHandler(trace_log, mode='w')
-        trace_format = logging.Formatter('%(message)s')
+        print(f"debug: {debug}")
+        trace_handler = logging.FileHandler(trace_log, mode="w")
+        trace_format = logging.Formatter("%(message)s")
         trace_handler.setFormatter(trace_format)
         trace_handler.setLevel(logging.DEBUG)
         logger.addHandler(trace_handler)
@@ -79,19 +80,20 @@ def main():
     args = parse_args()
 
     if Path(args.config).exists() is False:
-        print(f'config: {args.config} does not exist', file=sys.stderr)
+        print(f"config: {args.config} does not exist", file=sys.stderr)
         return -1
 
     # Set these variables from argument
     config = Config(file=args.config)
 
-    set_up_logging(audit_log=config.audit_log_file(),
-                   trace_log=config.trace_log_file(),
-                   verbose=args.verbose,
-                   debug=args.debug)
+    set_up_logging(
+        audit_log=config.audit_log_file(),
+        trace_log=config.trace_log_file(),
+        verbose=args.verbose,
+        debug=args.debug,
+    )
 
     logger = logging.getLogger(__name__)
-
 
     logger.warn(get_line("=", "="))
     logger.warn(get_form("Configuration:"))
@@ -103,7 +105,7 @@ def main():
     # Write everything to DEBUG
     # Write what I want to see on stdout to INFO
     start_time = datetime.now().replace(microsecond=0)
-    logger.info(get_form(f'Start time: {start_time}'))
+    logger.info(get_form(f"Start time: {start_time}"))
     logger.info(get_line("-", "+"))
 
     watch_list = []
@@ -112,27 +114,27 @@ def main():
         watch_list.append(
             WatchListItem(
                 ticker=ticker,
-                weight=val['weight'],
-                book_size_range=val['book_size'],
-                price_range=val['price_range'],
-                size_range=val['size_range']
+                weight=val["weight"],
+                book_size_range=val["book_size"],
+                price_range=val["price_range"],
+                size_range=val["size_range"],
             )
         )
-        logger.warn(get_form(f' + {watch_list[-1]}'))
+        logger.warn(get_form(f" + {watch_list[-1]}"))
     logger.warn(get_line("-", "+"))
 
     generator = Generator(
         watch_list=watch_list,
         msg_rate_p_sec=config.msg_rate_p_sec(),
         start_time=start_time,
-        seed=1_000
+        seed=1_000,
     )
 
-    logger.info('')
+    logger.info("")
     logger.info(get_line("=", "="))
     logger.info("Initial Order Book")
     logger.info(get_line("=", "="))
-    logger.info('')
+    logger.info("")
     logger.info(generator._orderbook.get_order_book(ticker))
 
     # Generate Messages
@@ -143,14 +145,16 @@ def main():
         new_msg = generator.getNextMsg()
         if new_msg is None:
             continue
-        #logger.warn(f'New message: {new_msg}')
+        # logger.warn(f'New message: {new_msg}')
         msg_count += 1
 
         if (seq_unit_hdr.getLength() + new_msg.length()) <= seq_unit_hdr_len:
             seq_unit_hdr.addMessage(new_msg)
         else:
             seq_unit_array.append(seq_unit_hdr)
-            seq_unit_hdr = SequencedUnitHeader(hdr_sequence=seq_unit_hdr.getNextSequence())
+            seq_unit_hdr = SequencedUnitHeader(
+                hdr_sequence=seq_unit_hdr.getNextSequence()
+            )
             seq_unit_hdr.addMessage(new_msg)
     if seq_unit_hdr.hdr_count() > 0:
         seq_unit_array.append(seq_unit_hdr)
@@ -167,22 +171,23 @@ def main():
 
         # Print Sequenced Unit Header info
         file_offset = f_bin.tell()
-        print(f'Offset={str(hex(file_offset))}: {seq_unit_hdr}')
+        print(f"Offset={str(hex(file_offset))}: {seq_unit_hdr}")
 
         # Write Sequenced Unit Header to file
         new_msg_bytes = seq_unit_hdr.get_bytes()
         new_msg_bytes_str = ", ".join([str(hex(x)) for x in new_msg_bytes])
-        print(f'DEBUG: bytes: {new_msg_bytes_str}')
+        print(f"DEBUG: bytes: {new_msg_bytes_str}")
         f_bin.write(new_msg_bytes)
 
         for message in seq_unit_hdr.getMessages():
             # Print one-liner for each message in Sequenced Unit Header, including file offset
             file_offset = f_bin.tell()
-            logger.warn(f'\t - Offset={str(hex(file_offset))}: {message}')
+            logger.warn(f"\t - Offset={str(hex(file_offset))}: {message}")
             # Print each message to file
             f_bin.write(message.get_bytes())
 
     f_bin.close()
+
 
 #    for i in range(num_of_msgs):
 #        logger.info(get_line(" ", " "))

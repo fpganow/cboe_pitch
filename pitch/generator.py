@@ -16,6 +16,7 @@ from .trade import TradeLong, TradeShort, TradeExpanded
 
 logger = logging.getLogger(__name__)
 
+
 class WatchListItem:
     def __init__(
         self,
@@ -62,8 +63,10 @@ class WatchListItem:
         return self._size_range
 
     def __str__(self):
-        return (f'({self._ticker}, weight: {self._weight}, book size: {self._book_size_range}' +
-                f', price range: {self._price_range}, size range: {self._size_range})')
+        return (
+            f"({self._ticker}, weight: {self._weight}, book size: {self._book_size_range}"
+            + f", price range: {self._price_range}, size range: {self._size_range})"
+        )
 
 
 class Generator(object):
@@ -300,14 +303,14 @@ class Generator(object):
         if self._orderbook.has_ticker(ticker=ticker) is False:
             raise Exception(f'Invalid Ticker "{ticker}" (not in OrderBook)')
 
-        logger.debug(f'MsgType.Add')
+        logger.debug(f"MsgType.Add")
         # Is book too small?
         if (
             len(self._orderbook.get_orders(ticker=ticker, side=side))
             < self._watch_list[ticker][side].book_size_range[0]
         ):
             # We want an Add
-            logger.debug(f'MsgType.Add')
+            logger.debug(f"MsgType.Add")
             return Generator.MsgType.Add
         # Is book too big?
         elif (
