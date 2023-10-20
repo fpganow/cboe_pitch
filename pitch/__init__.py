@@ -2,6 +2,7 @@
 # https://www.cboe.com/us/equities/support/technical/
 #
 
+import json
 from typing import List
 
 from .delete_order import DeleteOrder
@@ -21,17 +22,21 @@ from .trade import TradeLong, TradeShort, TradeExpanded
 
 
 def get_time(parameters) -> List[int]:
-    seconds_since_midnight = getattr(parameters, "Time")
+    json_dict = json.loads(parameters)
+
+    seconds_since_midnight = json_dict["Time"]
     return list(Time.from_parms(time=seconds_since_midnight).get_bytes())
 
 
 def get_add_order_long(parameters) -> List[int]:
-    time_offset = getattr(parameters, "Time Offset")
-    order_id = getattr(parameters, "Order Id")
-    side = getattr(parameters, "Side Indicator")
-    quantity = getattr(parameters, "Quantity")
-    symbol = getattr(parameters, "Symbol")
-    price = getattr(parameters, "Price")
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
+    side = json_dict["Side Indicator"]
+    quantity = json_dict["Quantity"]
+    symbol = json_dict["Symbol"]
+    price = json_dict["Price"]
     msg_bytes = AddOrderLong.from_parms(
         time_offset=time_offset,
         order_id=order_id,
@@ -44,12 +49,14 @@ def get_add_order_long(parameters) -> List[int]:
 
 
 def get_add_order_short(parameters) -> List[int]:
-    time_offset = getattr(parameters, "Time Offset")
-    order_id = getattr(parameters, "Order Id")
-    side = getattr(parameters, "Side Indicator")
-    quantity = getattr(parameters, "Quantity")
-    symbol = getattr(parameters, "Symbol")
-    price = getattr(parameters, "Price")
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
+    side = json_dict["Side Indicator"]
+    quantity = json_dict["Quantity"]
+    symbol = json_dict["Symbol"]
+    price = json_dict["Price"]
     msg_bytes = AddOrderShort.from_parms(
         time_offset=time_offset,
         order_id=order_id,
@@ -59,18 +66,20 @@ def get_add_order_short(parameters) -> List[int]:
         price=price,
     ).get_bytes()
     return list(msg_bytes)
-    pass
 
 
-def get_add_order_expanded(parameters) -> List[int]:
-    time_offset = getattr(parameters, "Time Offset")
-    order_id = getattr(parameters, "Order Id")
-    side = getattr(parameters, "Side Indicator")
-    quantity = getattr(parameters, "Quantity")
-    symbol = getattr(parameters, "Symbol")
-    price = getattr(parameters, "Price")
-    participant_id = getattr(parameters, "Participant Id")
-    customer_indicator = getattr(parameters, "Customer Indicator")
+def get_add_order_expanded(parameters: str) -> List[int]:
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
+    side = json_dict["Side Indicator"]
+    quantity = json_dict["Quantity"]
+    symbol = json_dict["Symbol"]
+    price = json_dict["Price"]
+    participant_id = json_dict["Participant Id"]
+    customer_indicator = json_dict["Customer Indicator"]
+
     msg_bytes = AddOrderExpanded.from_parms(
         time_offset=time_offset,
         order_id=order_id,
@@ -85,10 +94,12 @@ def get_add_order_expanded(parameters) -> List[int]:
 
 
 def get_order_executed(parameters) -> List[int]:
-    time_offset = getattr(parameters, "Time Offset")
-    order_id = getattr(parameters, "Order Id")
-    executed_quantity = getattr(parameters, "Executed Quantity")
-    execution_id = getattr(parameters, "Execution Id")
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
+    executed_quantity = json_dict["Executed Quantity"]
+    execution_id = json_dict["Execution Id"]
     msg_bytes = OrderExecuted.from_parms(
         time_offset=time_offset,
         order_id=order_id,
@@ -99,9 +110,11 @@ def get_order_executed(parameters) -> List[int]:
 
 
 def get_reduce_size_long(parameters) -> List[int]:
-    time_offset = getattr(parameters, "Time Offset")
-    order_id = getattr(parameters, "Order Id")
-    canceled_quantity = getattr(parameters, "Canceled Quantity")
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
+    canceled_quantity = json_dict["Canceled Quantity"]
 
     msg_bytes = ReduceSizeLong.from_parms(
         time_offset=time_offset, order_id=order_id, canceled_quantity=canceled_quantity
@@ -111,9 +124,11 @@ def get_reduce_size_long(parameters) -> List[int]:
 
 
 def get_reduce_size_short(parameters) -> List[int]:
-    time_offset = getattr(parameters, "Time Offset")
-    order_id = getattr(parameters, "Order Id")
-    canceled_quantity = getattr(parameters, "Canceled Quantity")
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
+    canceled_quantity = json_dict["Canceled Quantity"]
 
     msg_bytes = ReduceSizeShort.from_parms(
         time_offset=time_offset, order_id=order_id, canceled_quantity=canceled_quantity
@@ -123,10 +138,12 @@ def get_reduce_size_short(parameters) -> List[int]:
 
 
 def get_modify_order_long(parameters) -> List[int]:
-    time_offset = getattr(parameters, "Time Offset")
-    order_id = getattr(parameters, "Order Id")
-    quantity = getattr(parameters, "Quantity")
-    price = getattr(parameters, "Price")
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
+    quantity = json_dict["Quantity"]
+    price = json_dict["Price"]
 
     msg_bytes = ModifyOrderLong.from_parms(
         time_offset=time_offset, order_id=order_id, quantity=quantity, price=price
@@ -136,10 +153,12 @@ def get_modify_order_long(parameters) -> List[int]:
 
 
 def get_modify_order_short(parameters) -> List[int]:
-    time_offset = getattr(parameters, "Time Offset")
-    order_id = getattr(parameters, "Order Id")
-    quantity = getattr(parameters, "Quantity")
-    price = getattr(parameters, "Price")
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
+    quantity = json_dict["Quantity"]
+    price = json_dict["Price"]
 
     msg_bytes = ModifyOrderShort.from_parms(
         time_offset=time_offset, order_id=order_id, quantity=quantity, price=price
@@ -149,8 +168,10 @@ def get_modify_order_short(parameters) -> List[int]:
 
 
 def get_delete_order(parameters) -> List[int]:
-    time_offset = getattr(parameters, "Time Offset")
-    order_id = getattr(parameters, "Order Id")
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
 
     msg_bytes = DeleteOrder.from_parms(
         time_offset=time_offset, order_id=order_id
@@ -160,13 +181,15 @@ def get_delete_order(parameters) -> List[int]:
 
 
 def get_trade_long(parameters) -> List[int]:
-    time_offset = getattr(parameters, "Time Offset")
-    order_id = getattr(parameters, "Order Id")
-    side = getattr(parameters, "Side Indicator")
-    quantity = getattr(parameters, "Quantity")
-    symbol = getattr(parameters, "Symbol")
-    price = getattr(parameters, "Price")
-    execution_id = getattr(parameters, "Execution Id")
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
+    side = json_dict["Side Indicator"]
+    quantity = json_dict["Quantity"]
+    symbol = json_dict["Symbol"]
+    price = json_dict["Price"]
+    execution_id = json_dict["Execution Id"]
 
     msg_bytes = TradeLong.from_parms(
         time_offset=time_offset,
@@ -182,13 +205,15 @@ def get_trade_long(parameters) -> List[int]:
 
 
 def get_trade_short(parameters) -> List[int]:
-    time_offset = getattr(parameters, "Time Offset")
-    order_id = getattr(parameters, "Order Id")
-    side = getattr(parameters, "Side Indicator")
-    quantity = getattr(parameters, "Quantity")
-    symbol = getattr(parameters, "Symbol")
-    price = getattr(parameters, "Price")
-    execution_id = getattr(parameters, "Execution Id")
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
+    side = json_dict["Side Indicator"]
+    quantity = json_dict["Quantity"]
+    symbol = json_dict["Symbol"]
+    price = json_dict["Price"]
+    execution_id = json_dict["Execution Id"]
 
     msg_bytes = TradeShort.from_parms(
         time_offset=time_offset,
@@ -204,13 +229,15 @@ def get_trade_short(parameters) -> List[int]:
 
 
 def get_trade_expanded(parameters) -> List[int]:
-    time_offset = getattr(parameters, "Time Offset")
-    order_id = getattr(parameters, "Order Id")
-    side = getattr(parameters, "Side Indicator")
-    quantity = getattr(parameters, "Quantity")
-    symbol = getattr(parameters, "Symbol")
-    price = getattr(parameters, "Price")
-    execution_id = getattr(parameters, "Execution Id")
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
+    side = json_dict["Side Indicator"]
+    quantity = json_dict["Quantity"]
+    symbol = json_dict["Symbol"]
+    price = json_dict["Price"]
+    execution_id = json_dict["Execution Id"]
 
     msg_bytes = TradeExpanded.from_parms(
         time_offset=time_offset,
@@ -226,10 +253,12 @@ def get_trade_expanded(parameters) -> List[int]:
 
 
 def get_order_executed(parameters) -> List[int]:
-    time_offset = getattr(parameters, "Time Offset")
-    order_id = getattr(parameters, "Order Id")
-    executed_quantity = getattr(parameters, "Executed Quantity")
-    execution_id = getattr(parameters, "Execution Id")
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
+    executed_quantity = json_dict["Executed Quantity"]
+    execution_id = json_dict["Execution Id"]
 
     msg_bytes = OrderExecuted.from_parms(
         time_offset=time_offset,
@@ -242,12 +271,14 @@ def get_order_executed(parameters) -> List[int]:
 
 
 def get_order_executed_at_price_size(parameters) -> List[int]:
-    time_offset = getattr(parameters, "Time Offset")
-    order_id = getattr(parameters, "Order Id")
-    executed_quantity = getattr(parameters, "Executed Quantity")
-    remaining_quantity = getattr(parameters, "Remaining Quantity")
-    execution_id = getattr(parameters, "Execution Id")
-    price = getattr(parameters, "Price")
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
+    executed_quantity = json_dict["Executed Quantity"]
+    remaining_quantity = json_dict["Remaining Quantity"]
+    execution_id = json_dict["Execution Id"]
+    price = json_dict["Price"]
 
     msg_bytes = OrderExecutedAtPriceSize.from_parms(
         time_offset=time_offset,
