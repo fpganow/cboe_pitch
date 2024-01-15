@@ -21,6 +21,20 @@ from .reduce_size import ReduceSizeLong, ReduceSizeShort
 from .trade import TradeLong, TradeShort, TradeExpanded
 
 
+class TimeObj:
+    def set_obj(self, time: Time):
+        self.time = time
+
+    def get_time(self) -> Time:
+        return self.time
+
+def get_time_obj(parameters) -> TimeObj:
+    json_dict = json.loads(parameters)
+
+    seconds_since_midnight = json_dict["Time"]
+    return Time.from_parms(time=seconds_since_midnight)
+
+
 def get_time(parameters) -> List[int]:
     json_dict = json.loads(parameters)
 
