@@ -8,12 +8,19 @@ from pitch import get_time, get_add_order_long, get_order_executed
 
 class Parameters:
     @staticmethod
-    def from_dictionary(args: Dict[str, Any]) -> "Parameters":
-        parameters = Parameters()
+    def from_dictionary(args: Dict[str, Any]) -> "":
+        parameters = ()
         for key, val in args.items():
             setattr(parameters, key, val)
         return parameters
-
+    @staticmethod
+    def to_json(args: Dict[str, Any]) -> str:
+        res = '{\n'
+        for key, val in args.items():
+            val_str = f'{str(val)}'
+            res += f'"{key}" : ' + val_str
+        res += '}'
+        return res
 
 class TestTime(TestCase):
     def test_timestamp_create(self):

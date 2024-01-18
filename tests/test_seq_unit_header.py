@@ -4,9 +4,10 @@ from unittest import TestCase
 import pkg_resources
 from hamcrest import assert_that, has_length, equal_to, instance_of
 
-from pitch.add_order import AddOrderShort
+from pitch.add_order import AddOrderShort, AddOrderLong
 from pitch.seq_unit_header import SequencedUnitHeader
 from pitch.time import Time
+from .test_labview import Parameters
 
 
 class TestSequencedUnitHeader(TestCase):
@@ -136,3 +137,13 @@ class TestSequencedUnitHeader(TestCase):
         assert_that(new_msgs, has_length(2))
         assert_that(new_msgs[0], instance_of(AddOrderLong))
         assert_that(new_msgs[0], instance_of(AddOrderLong))
+
+    def test_seq_unit_hdr_w_time_msg(self):
+        # GIVEN
+        from pitch import get_time
+        time_msg_arr = get_time(Parameters.to_json({"Time": 34_200}))
+        pass
+
+#    def test_seq_unit_hdr_w_time_n_add_order(self):
+#        # GIVEN
+#        pass

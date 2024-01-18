@@ -1,6 +1,6 @@
 from typing import Optional
 from pathlib import Path
-import yaml
+import ruamel.yaml
 
 import logging
 
