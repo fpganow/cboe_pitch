@@ -11,6 +11,7 @@ from .time import Time
 from .add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
 from .order_executed import OrderExecuted, OrderExecutedAtPriceSize
 from .reduce_size import ReduceSizeLong, ReduceSizeShort
+from .seq_unit_header import SequencedUnitHeader
 
 #
 # LabVIEW Interface
@@ -19,6 +20,15 @@ from .reduce_size import ReduceSizeLong, ReduceSizeShort
 # using the Python Connectivity Palette
 #
 from .trade import TradeLong, TradeShort, TradeExpanded
+
+def get_seq_unit_hdr(parameters, msgs_array: List[int]) -> List[int]:
+    json_dict = json.loads(parameters)
+
+    HdrSeq = json_dict["HdrSeq"] 
+    HdrCount = json_dict["HdrCount"]
+    return list(SequencedUnitHeader.from_message_array(msgs_array=msgs_array, 
+        hdr_count=HdrCount,
+        hdr_sequence=HdrSeq))
 
 
 def get_time(parameters) -> List[int]:

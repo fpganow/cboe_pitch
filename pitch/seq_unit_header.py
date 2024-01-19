@@ -53,6 +53,19 @@ class SequencedUnitHeader(MessageBase):
         self._messages = []
 
     @staticmethod
+    def from_message_array(msgs_array: List[int],
+                           hdr_sequence: int = 0,
+                           hdr_count: int = 0) -> "SequencedUnitHeader":
+        # Pass an array in with all 
+        seq_unit_hdr = SequencedUnitHeader()
+        seq_unit_hdr.hdr_sequence(hdr_sequence)
+        seq_unit_hdr.hdr_count(hdr_count)
+        # TODO: Parse msgs_array and set self._messages
+        # TODO: Call get_bytes
+        return [1, 2]
+
+
+    @staticmethod
     def from_bytestream(msg_bytes: ByteString) -> "SequencedUnitHeader":
         # Read in Sequenced Unit Header
         seq_unit_hdr_bytes = msg_bytes[:8]
@@ -129,6 +142,17 @@ class SequencedUnitHeader(MessageBase):
         for msg in self._messages:
             total_length += msg.length()
         return total_length
+
+    def get_bytes(self) -> ByteString:
+        tot_len = self.getLength()
+        print(f'tot_len: {tot_len}')
+        self.hdr_length(tot_len)
+        hdr_bytes = super().get_bytes()
+        tmp_val_str = [f'0x{format(x, "02x")}' for x in hdr_bytes]
+        print(f'hdr_bytes: {tmp_val_str}')
+        # TODO: Support both interface via addMessage and from_message_byte_array
+        # Add bytes for every single message now
+        return hdr_bytes
 
     def __str__(self) -> str:
         pretty_msg_type = str(type(self)).split(".")[-1][:-2]

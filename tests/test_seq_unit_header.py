@@ -30,27 +30,40 @@ class TestSequencedUnitHeader(TestCase):
 
         # WHEN
         seq_unit_hdr = SequencedUnitHeader(hdr_sequence=start_seq_no)
+        hdr_bytes = seq_unit_hdr.get_bytes()
 
         # THEN
         assert_that(seq_unit_hdr.getNextSequence(), equal_to(start_seq_no))
+        assert_that(list(hdr_bytes), equal_to([
+            0x8, 0x00, 0x0, 0x1, 0x64, 0x0, 0x0, 0x0
+            ]))
 
     def test_get_next_sequence(self):
         # GIVEN
 
         # WHEN
         seq_unit_hdr = SequencedUnitHeader()
+        hdr_bytes = seq_unit_hdr.get_bytes()
 
         # THEN
         assert_that(seq_unit_hdr.getNextSequence(), equal_to(1))
+        assert_that(list(hdr_bytes), equal_to([
+            0x8, 0x00, 0x0, 0x1, 0x01, 0x0, 0x0, 0x0
+            ]))
 
     def test_add_message(self):
         # WHEN
-        seq_unit_hdr = SequencedUnitHeader()
+        seq_unit_hdr = SequencedUnitHeader(hdr_sequence=15)
         seq_unit_hdr.addMessage(self._new_msgs[0])
+        hdr_bytes = seq_unit_hdr.get_bytes()
 
         # THEN
-        assert_that(seq_unit_hdr.getNextSequence(), equal_to(2))
+        assert_that(seq_unit_hdr.getNextSequence(), equal_to(16))
         assert_that(seq_unit_hdr.getLength(), equal_to(self._new_msgs[0].length() + 8))
+        assert_that(list(hdr_bytes), equal_to([
+            0x22, 0x00, 0x1, 0x1, 0x0F, 0x0, 0x0, 0x0, # Seq Unit Hdr
+            6, 0x20, 0x98, 0x85, 0, 0  # Time
+            ]))
 
     def test_str(self):
         # WHEN
@@ -137,13 +150,3 @@ class TestSequencedUnitHeader(TestCase):
         assert_that(new_msgs, has_length(2))
         assert_that(new_msgs[0], instance_of(AddOrderLong))
         assert_that(new_msgs[0], instance_of(AddOrderLong))
-
-    def test_seq_unit_hdr_w_time_msg(self):
-        # GIVEN
-        from pitch import get_time
-        time_msg_arr = get_time(Parameters.to_json({"Time": 34_200}))
-        pass
-
-#    def test_seq_unit_hdr_w_time_n_add_order(self):
-#        # GIVEN
-#        pass
