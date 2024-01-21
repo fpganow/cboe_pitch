@@ -150,8 +150,15 @@ class SequencedUnitHeader(MessageBase):
         hdr_bytes = super().get_bytes()
         tmp_val_str = [f'0x{format(x, "02x")}' for x in hdr_bytes]
         print(f'hdr_bytes: {tmp_val_str}')
-        # TODO: Support both interface via addMessage and from_message_byte_array
-        # Add bytes for every single message now
+
+        print(f'self._messages: {self._messages}')
+        for msg in self._messages:
+            #print(f'msg: {msg}')
+            #msg_bytes = msg.get_bytes()
+            #print(f'len(msg_bytes): {len(msg_bytes)}')
+            #msg_bytes_str = [f'0x{format(x, "02x")}' for x in msg_bytes]
+            #print(f'msg_bytes_str: {msg_bytes_str}')
+            hdr_bytes.extend(msg.get_bytes())
         return hdr_bytes
 
     def __str__(self) -> str:
