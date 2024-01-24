@@ -75,28 +75,28 @@ class TestOrderExecuted(TestCase):
         assert_that(msg_bytes, has_length(greater_than(0)))
 
 # TODO: This is not implemented since it is being done inside LabVIEW
-#class TestSequencedUnitHeader(TestCase):
-#    def test_seq_unit_hdr_w_time_msg(self):
-#        # GIVEN
-#        from pitch import get_time
-#        time_msg_arr = get_time(Parameters.to_json({"Time": 34_200}))
-#
-#
-#        assert_that(time_msg_arr, has_length(6))
-#        assert_that(time_msg_arr, equal_to([0x6, 0x20, 0x98, 0x85, 0, 0]))
-#
-#        final_array = get_seq_unit_hdr(parameters=
-#                Parameters.to_json({
-#                                    "HdrSeq": 0,
-#                                    "HdrCount": 1
-#                                   }),
-#                                   msgs_array=time_msg_arr)
-#
-#
-#        print(f'time_msg_arr: {[hex(x) for x in time_msg_arr]}')
+class TestSequencedUnitHeader(TestCase):
+    def test_seq_unit_hdr_w_time_msg(self):
+        # GIVEN
+        # These functions are intended to be called from
+        # SystemVerilog via DPI
+        time_msg_arr = get_time(Parameters.to_json({"Time": 34_200}))
+
+        assert_that(time_msg_arr, has_length(6))
+        assert_that(time_msg_arr, equal_to([0x6, 0x20, 0x98, 0x85, 0, 0]))
+
+        final_array = get_seq_unit_hdr(parameters=
+                Parameters.to_json({
+                                    "HdrSeq": 0,
+                                    "HdrCount": 1
+                                   }),
+                                   msgs_array=time_msg_arr)
+
+
+        print(f'time_msg_arr: {[hex(x) for x in time_msg_arr]}')
 #        print(f'final_array: {[hex(x) for x in final_array]}')
-#        assert_that(final_array, equal_to([
-#            0, 1]))
+        assert_that(final_array, equal_to([
+            0, 1]))
 
 #    def test_seq_unit_hdr_w_time_n_add_order(self):
 #        # GIVEN
