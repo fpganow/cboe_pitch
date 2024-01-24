@@ -53,24 +53,24 @@ class SequencedUnitHeader(MessageBase):
         self._messages = []
 
     @staticmethod
-    def from_message_array(msgs_array: List[int],
-                           hdr_sequence: int = 0,
-                           hdr_count: int = 0) -> "SequencedUnitHeader":
-        # Pass an array in with all 
+    def from_message_array(
+        msgs_array: List[int], hdr_sequence: int = 0, hdr_count: int = 0
+    ) -> "SequencedUnitHeader":
+        # Pass an array in with all
         seq_unit_hdr = SequencedUnitHeader()
         seq_unit_hdr.hdr_sequence(hdr_sequence)
         seq_unit_hdr.hdr_count(hdr_count)
 
-        SequencedUnitHeader.parse_bytestream(seq_unit_hdr=seq_unit_hdr,
-                                             rem_bytes=msgs_array,
-                                             old_hdr_length=0)
+        SequencedUnitHeader.parse_bytestream(
+            seq_unit_hdr=seq_unit_hdr, rem_bytes=msgs_array, old_hdr_length=0
+        )
 
         return seq_unit_hdr.get_bytes()
 
     @staticmethod
-    def parse_bytestream(seq_unit_hdr: "SequencedUnitHeader",
-                         rem_bytes: ByteString,
-                         old_hdr_length: int) -> None:
+    def parse_bytestream(
+        seq_unit_hdr: "SequencedUnitHeader", rem_bytes: ByteString, old_hdr_length: int
+    ) -> None:
         while True:
             # Chop off a single message
             next_msg_len = rem_bytes[0]
@@ -87,7 +87,6 @@ class SequencedUnitHeader(MessageBase):
             else:
                 # Chop off message that was just parsed
                 rem_bytes = rem_bytes[next_msg_len:]
-
 
     @staticmethod
     def from_bytestream(msg_bytes: ByteString) -> "SequencedUnitHeader":
@@ -154,19 +153,19 @@ class SequencedUnitHeader(MessageBase):
 
     def get_bytes(self) -> ByteString:
         tot_len = self.getLength()
-        print(f'tot_len: {tot_len}')
+        print(f"tot_len: {tot_len}")
         self.hdr_length(tot_len)
         hdr_bytes = super().get_bytes()
         tmp_val_str = [f'0x{format(x, "02x")}' for x in hdr_bytes]
-        print(f'hdr_bytes: {tmp_val_str}')
+        print(f"hdr_bytes: {tmp_val_str}")
 
-        print(f'self._messages: {self._messages}')
+        print(f"self._messages: {self._messages}")
         for msg in self._messages:
-            #print(f'msg: {msg}')
-            #msg_bytes = msg.get_bytes()
-            #print(f'len(msg_bytes): {len(msg_bytes)}')
-            #msg_bytes_str = [f'0x{format(x, "02x")}' for x in msg_bytes]
-            #print(f'msg_bytes_str: {msg_bytes_str}')
+            # print(f'msg: {msg}')
+            # msg_bytes = msg.get_bytes()
+            # print(f'len(msg_bytes): {len(msg_bytes)}')
+            # msg_bytes_str = [f'0x{format(x, "02x")}' for x in msg_bytes]
+            # print(f'msg_bytes_str: {msg_bytes_str}')
             hdr_bytes.extend(msg.get_bytes())
         return hdr_bytes
 
