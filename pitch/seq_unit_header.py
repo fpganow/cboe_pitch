@@ -60,9 +60,12 @@ class SequencedUnitHeader(MessageBase):
         seq_unit_hdr = SequencedUnitHeader()
         seq_unit_hdr.hdr_sequence(hdr_sequence)
         seq_unit_hdr.hdr_count(hdr_count)
-        # TODO: Parse msgs_array and set self._messages
-        # TODO: Call get_bytes
-        return [1, 2]
+
+        SequencedUnitHeader.parse_bytestream(seq_unit_hdr=seq_unit_hdr,
+                                             rem_bytes=msgs_array,
+                                             old_hdr_length=0)
+
+        return seq_unit_hdr.get_bytes()
 
     @staticmethod
     def parse_bytestream(seq_unit_hdr: "SequencedUnitHeader",

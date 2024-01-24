@@ -80,15 +80,15 @@ class TestSequencedUnitHeader(TestCase):
         # GIVEN
         # These functions are intended to be called from
         # SystemVerilog via DPI
-        time_msg_arr = get_time(Parameters.to_json({"Time": 34_200}))
+        time_msg_arr = get_time(Parameters.to_json({"Time": 34_201}))
 
         assert_that(time_msg_arr, has_length(6))
-        assert_that(time_msg_arr, equal_to([0x6, 0x20, 0x98, 0x85, 0, 0]))
+        assert_that(time_msg_arr, equal_to([0x6, 0x20, 0x99, 0x85, 0, 0]))
 
         final_array = get_seq_unit_hdr(parameters=
                 Parameters.to_json({
-                                    "HdrSeq": 0,
-                                    "HdrCount": 1
+                                    "HdrSeq": 15,
+                                    "HdrCount": 0
                                    }),
                                    msgs_array=time_msg_arr)
 
@@ -96,8 +96,13 @@ class TestSequencedUnitHeader(TestCase):
         print(f'time_msg_arr: {[hex(x) for x in time_msg_arr]}')
 #        print(f'final_array: {[hex(x) for x in final_array]}')
         assert_that(final_array, equal_to([
-            0, 1]))
+            0xE, 0x00, 0x1, 0x1, 0x0F, 0x0, 0x0, 0x0, # Seq Unit Hdr
+            0x6,  0x20, 0x99, 0x85, 0, 0 # Time
+            ]))
 
-#    def test_seq_unit_hdr_w_time_n_add_order(self):
-#        # GIVEN
-#        pass
+    def test_seq_unit_hdr_w_time_n_add_order(self):
+        # GIVEN
+        pass
+        #full_msg_array = None
+        #full_msg_array.extend(new_time_msg)
+        #full_msg_array.extend(new_add_order_msg)

@@ -7,3 +7,4 @@ dist
 Session.vim
 vent_wsl
 *.log
+tags
