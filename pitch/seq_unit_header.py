@@ -64,6 +64,27 @@ class SequencedUnitHeader(MessageBase):
         # TODO: Call get_bytes
         return [1, 2]
 
+    @staticmethod
+    def parse_bytestream(seq_unit_hdr: "SequencedUnitHeader",
+                         rem_bytes: ByteString,
+                         old_hdr_length: int) -> None:
+        while True:
+            # Chop off a single message
+            next_msg_len = rem_bytes[0]
+            next_msg_bytes = rem_bytes[:next_msg_len]
+            next_msg = MessageFactory.from_bytes(next_msg_bytes)
+            seq_unit_hdr.addMessage(next_msg)
+
+            # Is final message?
+            if (
+                len(next_msg_bytes) == len(rem_bytes)
+                or old_hdr_length == seq_unit_hdr.hdr_length()
+            ):
+                break
+            else:
+                # Chop off message that was just parsed
+                rem_bytes = rem_bytes[next_msg_len:]
+
 
     @staticmethod
     def from_bytestream(msg_bytes: ByteString) -> "SequencedUnitHeader":
@@ -83,22 +104,7 @@ class SequencedUnitHeader(MessageBase):
         # Remaining Bytes
         rem_bytes = msg_bytes[8:]
 
-        while True:
-            # Chop off a single message
-            next_msg_len = rem_bytes[0]
-            next_msg_bytes = rem_bytes[:next_msg_len]
-            next_msg = MessageFactory.from_bytes(next_msg_bytes)
-            seq_unit_hdr.addMessage(next_msg)
-
-            # Is final message?
-            if (
-                len(next_msg_bytes) == len(rem_bytes)
-                or old_hdr_length == seq_unit_hdr.hdr_length()
-            ):
-                break
-            else:
-                # Chop off message that was just parsed
-                rem_bytes = rem_bytes[next_msg_len:]
+        SequencedUnitHeader.parse_bytestream(seq_unit_hdr, rem_bytes, old_hdr_length)
 
         rem_data = None
         if seq_unit_hdr.hdr_length() < len(msg_bytes):
