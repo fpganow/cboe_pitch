@@ -74,7 +74,6 @@ class TestOrderExecuted(TestCase):
         # THEN
         assert_that(msg_bytes, has_length(greater_than(0)))
 
-# TODO: This is not implemented since it is being done inside LabVIEW
 class TestSequencedUnitHeader(TestCase):
     def test_seq_unit_hdr_w_time_msg(self):
         # GIVEN
@@ -102,6 +101,8 @@ class TestSequencedUnitHeader(TestCase):
 
     def test_seq_unit_hdr_w_time_n_add_order(self):
         # GIVEN
+        final_arr = list()
+        final_arr
         pass
         #full_msg_array = None
         #full_msg_array.extend(new_time_msg)
