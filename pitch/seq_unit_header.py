@@ -153,13 +153,10 @@ class SequencedUnitHeader(MessageBase):
 
     def get_bytes(self) -> ByteString:
         tot_len = self.getLength()
-        print(f"tot_len: {tot_len}")
         self.hdr_length(tot_len)
         hdr_bytes = super().get_bytes()
         tmp_val_str = [f'0x{format(x, "02x")}' for x in hdr_bytes]
-        print(f"hdr_bytes: {tmp_val_str}")
 
-        print(f"self._messages: {self._messages}")
         for msg in self._messages:
             # print(f'msg: {msg}')
             # msg_bytes = msg.get_bytes()
