@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List
 
-from pitch.seq_unit_header import SequencedUnitHeader
+from .seq_unit_header import SequencedUnitHeader
 
 
 class FileParser:

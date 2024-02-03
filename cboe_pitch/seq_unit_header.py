@@ -1,8 +1,8 @@
 import collections
 from typing import ByteString, List, OrderedDict
 
-from pitch.message_factory import MessageFactory
-from pitch.pitch24 import MessageBase, FieldName, FieldSpec, FieldType
+from .message_factory import MessageFactory
+from .pitch24 import MessageBase, FieldName, FieldSpec, FieldType
 
 
 class SequencedUnitHeader(MessageBase):

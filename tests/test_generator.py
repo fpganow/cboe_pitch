@@ -15,14 +15,14 @@ from hamcrest import (
     not_,
 )
 
-from pitch import ModifyOrderLong, TradeLong
-from pitch.add_order import AddOrderLong, AddOrderShort
-from pitch.delete_order import DeleteOrder
-from pitch.generator import Generator
-from pitch.generator import WatchListItem
-from pitch.order_executed import OrderExecutedAtPriceSize
-from pitch.orderbook import Side
-from pitch.reduce_size import ReduceSizeLong
+from cboe_pitch import ModifyOrderLong, TradeLong
+from cboe_pitch.add_order import AddOrderLong, AddOrderShort
+from cboe_pitch.delete_order import DeleteOrder
+from cboe_pitch.generator import Generator
+from cboe_pitch.generator import WatchListItem
+from cboe_pitch.order_executed import OrderExecutedAtPriceSize
+from cboe_pitch.orderbook import Side
+from cboe_pitch.reduce_size import ReduceSizeLong
 
 
 def setupTest(

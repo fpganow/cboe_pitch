@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from hamcrest import assert_that, has_length, has_item, equal_to
 
-from pitch.orderbook import OrderBook, Side
+from cboe_pitch.orderbook import OrderBook, Side
 
 
 class TestOrderBook(TestCase):

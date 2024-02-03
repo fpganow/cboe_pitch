@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from hamcrest import assert_that, equal_to, has_length, greater_than
 
-from pitch import get_time, get_add_order_long, get_order_executed, get_seq_unit_hdr
+from cboe_pitch import get_time, get_add_order_long, get_order_executed, get_seq_unit_hdr
 
 
 class Parameters:

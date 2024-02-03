@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from hamcrest import assert_that, has_length, is_
 
-from pitch.trade import TradeLong, TradeShort, TradeExpanded
+from cboe_pitch.trade import TradeLong, TradeShort, TradeExpanded
 from tests.comparator import compare_bytes
 
 

@@ -4,9 +4,9 @@ from unittest import TestCase
 import pkg_resources
 from hamcrest import assert_that, has_length, equal_to, instance_of
 
-from pitch.add_order import AddOrderShort, AddOrderLong
-from pitch.seq_unit_header import SequencedUnitHeader
-from pitch.time import Time
+from cboe_pitch.add_order import AddOrderShort, AddOrderLong
+from cboe_pitch.seq_unit_header import SequencedUnitHeader
+from cboe_pitch.time import Time
 from .test_labview import Parameters
 
 

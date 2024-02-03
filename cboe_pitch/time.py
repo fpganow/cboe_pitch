@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pitch.pitch24 import MessageBase, FieldName, FieldSpec, FieldType
+from .pitch24 import MessageBase, FieldName, FieldSpec, FieldType
 
 
 class Time(MessageBase):

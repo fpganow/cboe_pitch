@@ -2,8 +2,8 @@ from unittest import TestCase
 
 from hamcrest import assert_that, has_length, is_, equal_to, instance_of
 
-from pitch.message_factory import MessageFactory
-from pitch.time import Time
+from cboe_pitch.message_factory import MessageFactory
+from cboe_pitch.time import Time
 from tests.comparator import compare_bytes
 
 
