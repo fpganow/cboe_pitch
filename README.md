@@ -27,10 +27,10 @@ print(f'{message.get_bytes()}')
 
 ## See Also
 
-I am using the code in this module to test a LabVIEW FPGA CBOE Pitch
+I am using the code in this module to test a LabVIEW FPGA CBOE BATS Pitch
 Feed Handler and Filter
 
-http://github.com/fpganow/cboe_pitch_lv_fpga
+https://github.com/fpganow/Market.Data.Bats.Parser/blob/main/ip_export/bats_loader.py
 
 ## Usage
 

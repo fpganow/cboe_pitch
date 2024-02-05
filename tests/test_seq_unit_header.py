@@ -9,6 +9,12 @@ from cboe_pitch.seq_unit_header import SequencedUnitHeader
 from cboe_pitch.time import Time
 from .test_labview import Parameters
 
+# 2.4 Sequenced Unit Header
+#  0    2    HdrLength      Length of entire block of messages including this header
+#  2    1    HdrCount       Number of messages to follow this header
+#  3    1    HdrUnit        Unit that appliaces to messages included in this header
+#  4    4    HdrSequence    Sequence of first message to follow this header
+#
 
 class TestSequencedUnitHeader(TestCase):
     def setUp(self):
@@ -192,3 +198,11 @@ class TestSequencedUnitHeader(TestCase):
         assert_that(new_msgs, has_length(2))
         assert_that(new_msgs[0], instance_of(AddOrderLong))
         assert_that(new_msgs[0], instance_of(AddOrderLong))
+
+    def test_seq_unit_hdr_w_time_msg(self):
+        # GIVEN
+        pass
+
+    def test_seq_unit_hdr_w_time_n_add_order(self):
+        # GIVEN
+        pass

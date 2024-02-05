@@ -6,6 +6,11 @@ from cboe_pitch.message_factory import MessageFactory
 from cboe_pitch.time import Time
 from tests.comparator import compare_bytes
 
+# 4.2 Time
+#  0    1    Length         Length
+#  1    1    MessageType    0x20
+#  2    4    EpochTime      Number of whole seconds from midnight Eastern Time
+#
 
 class TestTime(TestCase):
     def test_timestamp_create(self):
