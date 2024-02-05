@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from hamcrest import assert_that, has_length, is_
 
-from pitch.reduce_size import ReduceSizeLong, ReduceSizeShort
+from cboe_pitch.reduce_size import ReduceSizeLong, ReduceSizeShort
 from tests.comparator import compare_bytes
 
 

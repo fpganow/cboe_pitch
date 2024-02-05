@@ -10,8 +10,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from pitch.generator import Generator, WatchListItem
-from pitch.seq_unit_header import SequencedUnitHeader
+from .generator import Generator, WatchListItem
+from .seq_unit_header import SequencedUnitHeader
 from .config import Config
 from .util import get_line, get_form
 

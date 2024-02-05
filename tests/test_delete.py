@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from hamcrest import assert_that, has_length, is_
 
-from pitch.delete_order import DeleteOrder
+from cboe_pitch.delete_order import DeleteOrder
 from tests.comparator import compare_bytes
 
 

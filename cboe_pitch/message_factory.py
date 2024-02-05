@@ -1,9 +1,9 @@
 from typing import ByteString, Union
 
-from pitch.time import Time
-from pitch.add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
-from pitch.order_executed import OrderExecuted, OrderExecutedAtPriceSize
-from pitch.reduce_size import ReduceSizeLong, ReduceSizeShort
+from .time import Time
+from .add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
+from .order_executed import OrderExecuted, OrderExecutedAtPriceSize
+from .reduce_size import ReduceSizeLong, ReduceSizeShort
 
 
 class MessageFactory:

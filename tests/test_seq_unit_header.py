@@ -4,9 +4,10 @@ from unittest import TestCase
 import pkg_resources
 from hamcrest import assert_that, has_length, equal_to, instance_of
 
-from pitch.add_order import AddOrderShort
-from pitch.seq_unit_header import SequencedUnitHeader
-from pitch.time import Time
+from cboe_pitch.add_order import AddOrderShort, AddOrderLong
+from cboe_pitch.seq_unit_header import SequencedUnitHeader
+from cboe_pitch.time import Time
+from .test_labview import Parameters
 
 # 2.4 Sequenced Unit Header
 #  0    2    HdrLength      Length of entire block of messages including this header
@@ -35,27 +36,82 @@ class TestSequencedUnitHeader(TestCase):
 
         # WHEN
         seq_unit_hdr = SequencedUnitHeader(hdr_sequence=start_seq_no)
+        hdr_bytes = seq_unit_hdr.get_bytes()
 
         # THEN
         assert_that(seq_unit_hdr.getNextSequence(), equal_to(start_seq_no))
+        assert_that(list(hdr_bytes), equal_to([
+            0x8, 0x00, 0x0, 0x1, 0x64, 0x0, 0x0, 0x0
+            ]))
 
     def test_get_next_sequence(self):
         # GIVEN
 
         # WHEN
         seq_unit_hdr = SequencedUnitHeader()
+        hdr_bytes = seq_unit_hdr.get_bytes()
 
         # THEN
         assert_that(seq_unit_hdr.getNextSequence(), equal_to(1))
+        assert_that(list(hdr_bytes), equal_to([
+            0x8, 0x00, 0x0, 0x1, 0x01, 0x0, 0x0, 0x0
+            ]))
 
-    def test_add_message(self):
+    def test_add_message_Time(self):
+        # GIVEN
+        time_msg = Time.from_parms(time=34_200)
+
         # WHEN
-        seq_unit_hdr = SequencedUnitHeader()
-        seq_unit_hdr.addMessage(self._new_msgs[0])
+        seq_unit_hdr = SequencedUnitHeader(hdr_sequence=15)
+        seq_unit_hdr.addMessage(time_msg)
+
+        hdr_bytes = seq_unit_hdr.get_bytes()
 
         # THEN
-        assert_that(seq_unit_hdr.getNextSequence(), equal_to(2))
+        assert_that(seq_unit_hdr.getNextSequence(), equal_to(16))
+        assert_that(seq_unit_hdr.getLength(), equal_to(time_msg.length() + 8))
+        assert_that(seq_unit_hdr.hdr_length(), equal_to(time_msg.length() + 8))
+        assert_that(list(hdr_bytes), equal_to([
+            0xE, 0x00, 0x1, 0x1, 0x0F, 0x0, 0x0, 0x0, # Seq Unit Hdr
+            0x6,  0x20, 0x98, 0x85, 0, 0 # Time
+            ]))
+
+    def test_from_byte_array_Time(self):
+        # GIVEN
+        time_msg = Time.from_parms(time=34_200)
+        time_arr = list(time_msg.get_bytes())
+
+        # WHEN
+        HdrSeq = 101
+        HdrCount = 0
+        seq_unit_hdr_arr = list(SequencedUnitHeader.from_message_array(msgs_array=time_arr, 
+                                hdr_count=HdrCount,
+                                hdr_sequence=HdrSeq))
+
+        # THEN
+        assert_that(time_arr, equal_to([0x6,  0x20, 0x98, 0x85, 0, 0]))
+        assert_that(seq_unit_hdr_arr, has_length(8 + 6))
+        assert_that(seq_unit_hdr_arr, equal_to([
+            0xE, 0x00, 0x1, 0x1, 0x65, 0x0, 0x0, 0x0, # Seq Unit Hdr
+            0x6,  0x20, 0x98, 0x85, 0, 0 # Time
+            ]))
+
+    def test_add_message_AddOrder(self):
+        # WHEN
+        seq_unit_hdr = SequencedUnitHeader(hdr_sequence=15)
+        seq_unit_hdr.addMessage(self._new_msgs[0])
+        hdr_bytes = seq_unit_hdr.get_bytes()
+
+        # THEN
+        assert_that(seq_unit_hdr.getNextSequence(), equal_to(16))
         assert_that(seq_unit_hdr.getLength(), equal_to(self._new_msgs[0].length() + 8))
+        assert_that(list(hdr_bytes), equal_to([
+            0x22, 0x00, 0x1, 0x1, 0x0F, 0x0, 0x0, 0x0, # Seq Unit Hdr
+            0x1a, 0x22, 0x64,  0x0,  0x0,  0x0, 0x4f, 0x52,
+            0x49, 0x44, 0x30, 0x31, 0x30, 0x30, 0x42, 0x64,
+            0x0,  0x41, 0x41, 0x50, 0x4c, 0x20, 0x20, 0x29,
+            0x27, 0x01 # AddOrderShort
+            ]))
 
     def test_str(self):
         # WHEN

@@ -2,7 +2,7 @@ from typing import List
 from hamcrest import assert_that, has_length, is_
 import logging
 from unittest import TestCase
-from pitch.seq_unit_header import SequencedUnitHeader
+from cboe_pitch.seq_unit_header import SequencedUnitHeader
 from tests.comparator import compare_bytes
 
 logger = logging.getLogger(__name__)

@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from hamcrest import assert_that, has_key, has_length, equal_to
 
-from pitch.config import Config
+from cboe_pitch.config import Config
 
 
 class TestConfig(TestCase):

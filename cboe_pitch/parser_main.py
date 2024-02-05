@@ -2,7 +2,7 @@ import argparse
 import logging
 from typing import Any
 
-from pitch.file_parser import FileParser
+from .file_parser import FileParser
 from .util import get_line, get_form
 
 sep_len = 89

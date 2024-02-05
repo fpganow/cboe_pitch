@@ -3,9 +3,9 @@ from unittest import TestCase
 from hamcrest import assert_that, equal_to, has_length, instance_of
 
 from pathlib import Path
-from pitch.file_parser import FileParser
-from pitch.add_order import AddOrderShort, AddOrderLong
-from pitch.time import Time
+from cboe_pitch.file_parser import FileParser
+from cboe_pitch.add_order import AddOrderShort, AddOrderLong
+from cboe_pitch.time import Time
 import pkg_resources
 
 
