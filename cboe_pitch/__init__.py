@@ -113,11 +113,34 @@ def get_order_executed(parameters) -> List[int]:
     order_id = json_dict["Order Id"]
     executed_quantity = json_dict["Executed Quantity"]
     execution_id = json_dict["Execution Id"]
+
     msg_bytes = OrderExecuted.from_parms(
         time_offset=time_offset,
         order_id=order_id,
         executed_quantity=executed_quantity,
         execution_id=execution_id,
+    ).get_bytes()
+
+    return list(msg_bytes)
+
+
+def get_order_executed_at_price_size(parameters) -> List[int]:
+    json_dict = json.loads(parameters)
+
+    time_offset = json_dict["Time Offset"]
+    order_id = json_dict["Order Id"]
+    executed_quantity = json_dict["Executed Quantity"]
+    remaining_quantity = json_dict["Remaining Quantity"]
+    execution_id = json_dict["Execution Id"]
+    price = json_dict["Price"]
+
+    msg_bytes = OrderExecutedAtPriceSize.from_parms(
+        time_offset=time_offset,
+        order_id=order_id,
+        executed_quantity=executed_quantity,
+        remaining_quantity=remaining_quantity,
+        execution_id=execution_id,
+        price=price,
     ).get_bytes()
     return list(msg_bytes)
 
@@ -262,43 +285,4 @@ def get_trade_expanded(parameters) -> List[int]:
         execution_id=execution_id,
     ).get_bytes()
 
-    return list(msg_bytes)
-
-
-def get_order_executed(parameters) -> List[int]:
-    json_dict = json.loads(parameters)
-
-    time_offset = json_dict["Time Offset"]
-    order_id = json_dict["Order Id"]
-    executed_quantity = json_dict["Executed Quantity"]
-    execution_id = json_dict["Execution Id"]
-
-    msg_bytes = OrderExecuted.from_parms(
-        time_offset=time_offset,
-        order_id=order_id,
-        executed_quantity=executed_quantity,
-        execution_id=execution_id,
-    ).get_bytes()
-
-    return list(msg_bytes)
-
-
-def get_order_executed_at_price_size(parameters) -> List[int]:
-    json_dict = json.loads(parameters)
-
-    time_offset = json_dict["Time Offset"]
-    order_id = json_dict["Order Id"]
-    executed_quantity = json_dict["Executed Quantity"]
-    remaining_quantity = json_dict["Remaining Quantity"]
-    execution_id = json_dict["Execution Id"]
-    price = json_dict["Price"]
-
-    msg_bytes = OrderExecutedAtPriceSize.from_parms(
-        time_offset=time_offset,
-        order_id=order_id,
-        executed_quantity=executed_quantity,
-        remaining_quantity=remaining_quantity,
-        execution_id=execution_id,
-        price=price,
-    ).get_bytes()
     return list(msg_bytes)
