@@ -5,11 +5,24 @@ from unittest import TestCase
 from hamcrest import assert_that, equal_to, has_length, greater_than
 
 from cboe_pitch import (
+    get_seq_unit_hdr,
     get_time,
     get_add_order_long, get_add_order_short, get_add_order_expanded,
     get_order_executed, get_order_executed_at_price_size,
-    get_seq_unit_hdr
+    get_reduce_size_long, get_reduce_size_short,
+    get_modify_order_long, get_modify_order_short,
+    get_delete_order,
+    get_trade_long, get_trade_short, get_trade_expanded
 )
+
+def dump_bytes(msg_bytes):
+    bytes_copy = msg_bytes.copy()
+    slick = None
+    while len(bytes_copy) > 0:
+        slick = bytes_copy[0:8]
+        line_str = ', '.join([f'{x:#04x}' for x in slick])
+        print(f'\t{line_str}, ')
+        bytes_copy = bytes_copy[8:]
 
 # TODO: Implement all of the remaining message types
 # Available methods:
@@ -23,8 +36,8 @@ from cboe_pitch import (
 # [tested]  0x2F  AddOrderExpanded
 # [tested]  0x23  OrderExecuted
 # [tested]  0x24  OrderExecutedAtPriceSize
-# 0x25 ReduceSizeLong
-# 0x26 ReduceSizeShort
+# [tested]  0x25  ReduceSizeLong
+# [tested]  0x26  ReduceSizeShort
 # 0x27 ModifyOrderLong
 # 0x28 ModifyOrderShort
 # 0x29 DeleteOrder
@@ -177,7 +190,6 @@ class TestOrderExecuted(TestCase):
         msg_bytes = get_order_executed(parameters=Parameters.to_json(args))
 
         # THEN
-        print(f'msg_bytes: {[hex(x) for x in msg_bytes]}')
         assert_that(msg_bytes, has_length(26))
         assert_that(msg_bytes, equal_to([
             0x1a, 0x23, 0xd0, 0x84,  0x0,  0x0, 0x4f, 0x52,
@@ -192,7 +204,9 @@ class TestOrderExecuted(TestCase):
             "Time Offset": 34_000,
             "Order Id": "ORID002",
             "Executed Quantity": 25_000,
+            "Remaining Quantity": 20_000,
             "Execution Id": "TSLA",
+            "Price": 0.905,
         }
 
         # WHEN
@@ -200,13 +214,120 @@ class TestOrderExecuted(TestCase):
 
         # THEN
         print(f'msg_bytes: {[hex(x) for x in msg_bytes]}')
-        assert_that(msg_bytes, has_length(26))
+        assert_that(msg_bytes, has_length(38))
         assert_that(msg_bytes, equal_to([
-            0x1a, 0x23, 0xd0, 0x84,  0x0,  0x0, 0x4f, 0x52,
+            0x26, 0x24, 0xd0, 0x84,  0x0,  0x0, 0x4f, 0x52,
             0x49, 0x44, 0x30, 0x30, 0x32,  0x0, 0xa8, 0x61,
-             0x0,  0x0, 0x54, 0x53, 0x4c, 0x41,  0x0,  0x0,
+             0x0,  0x0, 0x20, 0x4e,  0x0,  0x0, 0x54, 0x53,
+            0x4c, 0x41,  0x0,  0x0,  0x0,  0x0, 0x5a, 0x23,
+             0x0,  0x0,  0x0,  0x0,  0x0,  0x0
+            ]))
+
+
+class TestReduceSize(TestCase):
+    def test_reduce_size_long_create(self):
+        # GIVEN
+        args = {
+            "Time Offset": 34_000,
+            "Order Id": "ORID002",
+            "Canceled Quantity": 25_000,
+        }
+
+        # WHEN
+        msg_bytes = get_reduce_size_long(parameters=Parameters.to_json(args))
+
+        # THEN
+        assert_that(msg_bytes, has_length(18))
+        assert_that(msg_bytes, equal_to([
+            0x12, 0x25, 0xd0, 0x84,  0x0,  0x0, 0x4f, 0x52,
+            0x49, 0x44, 0x30, 0x30, 0x32,  0x0, 0xa8, 0x61,
              0x0,  0x0
             ]))
+
+
+    def test_reduce_size_short_create(self):
+        # GIVEN
+        args = {
+            "Time Offset": 34_000,
+            "Order Id": "ORID002",
+            "Canceled Quantity": 25_000,
+        }
+
+        # WHEN
+        msg_bytes = get_reduce_size_short(parameters=Parameters.to_json(args))
+
+        # THEN
+        dump_bytes(msg_bytes)
+
+        assert_that(msg_bytes, has_length(16))
+        assert_that(msg_bytes, equal_to([
+            0x10, 0x26, 0xd0, 0x84,  0x0,  0x0, 0x4f, 0x52,
+            0x49, 0x44, 0x30, 0x30, 0x32,  0x0, 0xa8, 0x61,
+            ]))
+
+
+class TestModifyOrder(TestCase):
+    def test_modify_order_long_create(self):
+        # GIVE
+        args = {
+            "Time Offset": 34_000,
+            "Order Id": "ORID002",
+            "Quantity": 25_000,
+            "Price": 0.905,
+        }
+
+        # WHEN
+        msg_bytes = get_modify_order_long(parameters=Parameters.to_json(args))
+
+        # THEN
+        assert_that(msg_bytes, has_length(18))
+        assert_that(msg_bytes, equal_to([
+            0x12, 0x25, 0xd0, 0x84,  0x0,  0x0, 0x4f, 0x52,
+            0x49, 0x44, 0x30, 0x30, 0x32,  0x0, 0xa8, 0x61,
+             0x0,  0x0
+            ]))
+
+
+    def test_modify_order_short_create(self):
+        # GIVEN
+        args = {
+            "Time Offset": 34_000,
+            "Order Id": "ORID002",
+            "Quantity": 25_000,
+            "Price": 0.905,
+        }
+
+        # WHEN
+        msg_bytes = get_modify_order_short(parameters=Parameters.to_json(args))
+
+        # THEN
+        dump_bytes(msg_bytes)
+
+        assert_that(msg_bytes, has_length(16))
+        assert_that(msg_bytes, equal_to([
+            0x10, 0x26, 0xd0, 0x84,  0x0,  0x0, 0x4f, 0x52,
+            0x49, 0x44, 0x30, 0x30, 0x32,  0x0, 0xa8, 0x61,
+            ]))
+
+
+class TestDeleteOrder(TestCase):
+    pass
+#def get_delete_order(parameters) -> List[int]:
+#    json_dict = json.loads(parameters)
+#
+#    time_offset = json_dict["Time Offset"]
+#    order_id = json_dict["Order Id"]
+#
+#    msg_bytes = DeleteOrder.from_parms(
+#        time_offset=time_offset, order_id=order_id
+#    ).get_bytes()
+#
+#    return list(msg_bytes)
+
+class TestTrade(TestCase):
+    pass
+
+
 
 class TestSequencedUnitHeader(TestCase):
     def test_seq_unit_hdr_w_time_msg(self):
