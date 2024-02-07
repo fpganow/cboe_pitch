@@ -2,11 +2,11 @@ from typing import ByteString, List, Union
 
 from .time import Time
 from .add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
+from .delete_order import DeleteOrder
+from .modify import ModifyOrderLong, ModifyOrderShort
 from .order_executed import OrderExecuted, OrderExecutedAtPriceSize
 from .reduce_size import ReduceSizeLong, ReduceSizeShort
-from .modify import ModifyOrderLong, ModifyOrderShort
-from .delete_order import DeleteOrder
-
+from .trade import TradeLong, TradeShort, TradeExpanded
 
 class MessageFactory:
     @staticmethod
@@ -47,6 +47,13 @@ class MessageFactory:
 
         elif msg_bytes[1] == DeleteOrder._messageType:
             message = DeleteOrder()
+
+        elif msg_bytes[1] == TradeLong._messageType:
+            message = TradeLong()
+        elif msg_bytes[1] == TradeShort._messageType:
+            message = TradeShort()
+        elif msg_bytes[1] == TradeExpanded._messageType:
+            message = TradeExpanded()
 
         if message is None:
             raise Exception("Unknown type")

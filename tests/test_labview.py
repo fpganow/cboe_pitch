@@ -24,9 +24,11 @@ from cboe_pitch.message_factory import MessageFactory
 
 from cboe_pitch.time import Time
 from cboe_pitch.add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
+from cboe_pitch.delete_order import DeleteOrder
+from cboe_pitch.modify import ModifyOrderLong, ModifyOrderShort
 from cboe_pitch.order_executed import OrderExecuted, OrderExecutedAtPriceSize
 from cboe_pitch.reduce_size import ReduceSizeLong, ReduceSizeShort
-from cboe_pitch.modify import ModifyOrderLong, ModifyOrderShort
+from cboe_pitch.trade import TradeLong, TradeShort, TradeExpanded
 
 #
 # Message Types:
@@ -100,7 +102,6 @@ class Parameters:
 #        res += '}'
 #        return res
 
-# TODO: Validate each message using the MessageBase.from_bytes() method
 class TestTime(TestCase):
     def test_timestamp_create(self):
         # GIVEN
@@ -415,11 +416,10 @@ class TestDeleteOrder(TestCase):
         msg_bytes = get_delete_order(parameters=Parameters.to_json(args))
 
         # THEN
-        dump_bytes(msg_bytes)
         assert_that(msg_bytes, has_length(14))
         assert_that(msg_bytes, equal_to([
             0x0e, 0x29, 0xd0, 0x84, 0x00, 0x00, 0x4f, 0x52,
-            0x49, 0x44, 0x30, 0x30, 0x30, 0x32,
+            0x49, 0x44, 0x30, 0x30, 0x30, 0x32
             ]))
         new_msg = MessageFactory.from_list(msg_bytes)
 
@@ -427,12 +427,13 @@ class TestDeleteOrder(TestCase):
         assert_that(new_msg.time_offset(), equal_to(34_000))
         assert_that(new_msg.order_id(), equal_to("ORID0002"))
 
+
 class TestTrade(TestCase):
     def test_trade_long_create(self):
         # GIVEN
         args = {
             "Time Offset": 34_000,
-            "Order Id": "ORID002",
+            "Order Id": "ORID0002",
             "Side Indicator": "B",
             "Quantity": 20_000,
             "Symbol": "AAPL",
@@ -444,48 +445,70 @@ class TestTrade(TestCase):
         msg_bytes = get_trade_long(parameters=Parameters.to_json(args))
 
         # THEN
+        dump_bytes(msg_bytes)
         assert_that(msg_bytes, has_length(41))
         assert_that(msg_bytes, equal_to([
             0x29, 0x2a, 0xd0, 0x84, 0x00, 0x00, 0x4f, 0x52,
-            0x49, 0x44, 0x30, 0x30, 0x32, 0x00, 0x42, 0x20,
+            0x49, 0x44, 0x30, 0x30, 0x30, 0x32, 0x42, 0x20,
             0x4e, 0x00, 0x00, 0x41, 0x41, 0x50, 0x4c, 0x20,
             0x20, 0xec, 0x68, 0x0f, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x45, 0x58, 0x45, 0x49, 0x44, 0x30, 0x30,
             0x31,
             ]))
+        new_msg = MessageFactory.from_list(msg_bytes)
+
+        assert_that(new_msg, instance_of(TradeLong))
+        assert_that(new_msg.time_offset(), equal_to(34_000))
+        assert_that(new_msg.order_id(), equal_to("ORID0002"))
+        assert_that(new_msg.side(), equal_to("B"))
+        assert_that(new_msg.quantity(), equal_to(20_000))
+        assert_that(new_msg.symbol(), equal_to("AAPL"))
+        assert_that(new_msg.price(), equal_to(100.99))
+        assert_that(new_msg.execution_id(), equal_to("EXEID001"))
 
 
     def test_trade_short_create(self):
         # GIVEN
         args = {
             "Time Offset": 34_000,
-            "Order Id": "ORID002",
+            "Order Id": "ORID0002",
             "Side Indicator": "B",
             "Quantity": 20_000,
             "Symbol": "AAPL",
             "Price": 100.99,
-            "Execution Id":"EXEID001"
+            "Execution Id":"EXEID002"
         }
 
         # WHEN
         msg_bytes = get_trade_short(parameters=Parameters.to_json(args))
 
         # THEN
+        dump_bytes(msg_bytes)
         assert_that(msg_bytes, has_length(33))
         assert_that(msg_bytes, equal_to([
             0x21, 0x2b, 0xd0, 0x84, 0x00, 0x00, 0x4f, 0x52,
-            0x49, 0x44, 0x30, 0x30, 0x32, 0x00, 0x42, 0x20,
+            0x49, 0x44, 0x30, 0x30, 0x30, 0x32, 0x42, 0x20,
             0x4e, 0x41, 0x41, 0x50, 0x4c, 0x20, 0x20, 0x73,
             0x27, 0x45, 0x58, 0x45, 0x49, 0x44, 0x30, 0x30,
-            0x31,
+            0x32,
             ]))
+        new_msg = MessageFactory.from_list(msg_bytes)
+
+        assert_that(new_msg, instance_of(TradeShort))
+        assert_that(new_msg.time_offset(), equal_to(34_000))
+        assert_that(new_msg.order_id(), equal_to("ORID0002"))
+        assert_that(new_msg.side(), equal_to("B"))
+        assert_that(new_msg.quantity(), equal_to(20_000))
+        assert_that(new_msg.symbol(), equal_to("AAPL"))
+        assert_that(new_msg.price(), equal_to(100.99))
+        assert_that(new_msg.execution_id(), equal_to("EXEID002"))
 
 
     def test_trade_expanded_create(self):
         # GIVEN
         args = {
             "Time Offset": 34_000,
-            "Order Id": "ORID002",
+            "Order Id": "ORID0002",
             "Side Indicator": "B",
             "Quantity": 20_000,
             "Symbol": "AAPL",
@@ -497,15 +520,26 @@ class TestTrade(TestCase):
         msg_bytes = get_trade_expanded(parameters=Parameters.to_json(args))
 
         # THEN
+        dump_bytes(msg_bytes)
         assert_that(msg_bytes, has_length(43))
         assert_that(msg_bytes, equal_to([
             0x2b, 0x30, 0xd0, 0x84, 0x00, 0x00, 0x4f, 0x52,
-            0x49, 0x44, 0x30, 0x30, 0x32, 0x00, 0x42, 0x20,
+            0x49, 0x44, 0x30, 0x30, 0x30, 0x32, 0x42, 0x20,
             0x4e, 0x00, 0x00, 0x41, 0x41, 0x50, 0x4c, 0x20,
             0x20, 0x20, 0x20, 0xec, 0x68, 0x0f, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x45, 0x58, 0x45, 0x49, 0x44,
             0x30, 0x30, 0x31,
             ]))
+        new_msg = MessageFactory.from_list(msg_bytes)
+
+        assert_that(new_msg, instance_of(TradeExpanded))
+        assert_that(new_msg.time_offset(), equal_to(34_000))
+        assert_that(new_msg.order_id(), equal_to("ORID0002"))
+        assert_that(new_msg.side(), equal_to("B"))
+        assert_that(new_msg.quantity(), equal_to(20_000))
+        assert_that(new_msg.symbol(), equal_to("AAPL"))
+        assert_that(new_msg.price(), equal_to(100.99))
+        assert_that(new_msg.execution_id(), equal_to("EXEID001"))
 
 
 class TestSequencedUnitHeader(TestCase):
@@ -526,7 +560,7 @@ class TestSequencedUnitHeader(TestCase):
                                    msgs_array=time_msg_arr)
 
 
-        print(f'time_msg_arr: {[hex(x) for x in time_msg_arr]}')
+#        print(f'time_msg_arr: {[hex(x) for x in time_msg_arr]}')
 #        print(f'final_array: {[hex(x) for x in final_array]}')
         assert_that(final_array, equal_to([
             0xE, 0x00, 0x1, 0x1, 0x0F, 0x0, 0x0, 0x0, # Seq Unit Hdr

@@ -27,10 +27,10 @@ class DeleteOrder(MessageBase):
             length=8,
             field_type=FieldType.Binary,
         )
-
-    def set_fields(self, time_offset: int, order_id: str):
         self._field_specs[FieldName.Length].value(14)
         self._field_specs[FieldName.MessageType].value(self._messageType)
+
+    def set_fields(self, time_offset: int, order_id: str):
         self._field_specs[FieldName.TimeOffset].value(time_offset)
         self.order_id(order_id)
 
