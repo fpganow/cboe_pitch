@@ -7,13 +7,15 @@ class DeleteOrder(MessageBase):
     def __init__(self):
         super().__init__()
         self._field_specs[FieldName.Length] = FieldSpec(
-            field_name=FieldName.Length, offset=0, length=1, field_type=FieldType.Binary
+            field_name=FieldName.Length, offset=0, length=1, field_type=FieldType.Binary,
+            value=14
         )
         self._field_specs[FieldName.MessageType] = FieldSpec(
             field_name=FieldName.MessageType,
             offset=1,
             length=1,
             field_type=FieldType.Value,
+            value=self._messageType
         )
         self._field_specs[FieldName.TimeOffset] = FieldSpec(
             field_name=FieldName.TimeOffset,

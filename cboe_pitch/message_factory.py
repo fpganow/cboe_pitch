@@ -4,7 +4,9 @@ from .time import Time
 from .add_order import AddOrderLong, AddOrderShort, AddOrderExpanded
 from .order_executed import OrderExecuted, OrderExecutedAtPriceSize
 from .reduce_size import ReduceSizeLong, ReduceSizeShort
-
+from .modify import ModifyOrderLong, ModifyOrderShort
+from .delete_order import DeleteOrder
+from .trade import TradeLong, TradeShort, TradeExpanded
 
 class MessageFactory:
     @staticmethod
@@ -28,6 +30,18 @@ class MessageFactory:
             message = ReduceSizeLong()
         elif msg_bytes[1] == ReduceSizeShort._messageType:
             message = ReduceSizeShort()
+        elif msg_bytes[1] == ModifyOrderLong._messageType:
+            message = ModifyOrderLong()
+        elif msg_bytes[1] == ModifyOrderShort._messageType:
+            message = ModifyOrderShort()
+        elif msg_bytes[1] == DeleteOrder._messageType:
+            message = DeleteOrder()
+        elif msg_bytes[1] == TradeLong._messageType:
+            message = TradeLong()
+        elif msg_bytes[1] == TradeShort._messageType:
+            message = TradeShort()
+        elif msg_bytes[1] == TradeExpanded._messageType:
+            message = TradeExpanded()
         if message is None:
             raise Exception("Unknown type")
         message.from_bytes(msg_bytes)

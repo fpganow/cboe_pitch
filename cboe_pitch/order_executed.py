@@ -35,7 +35,7 @@ class OrderExecutedBase(MessageBase):
             field_name=FieldName.ExecutionId,
             offset=18,
             length=8,
-            field_type=FieldType.Binary,
+            field_type=FieldType.PrintableAscii,
         )
 
     def set_fields(
