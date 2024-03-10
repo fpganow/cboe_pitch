@@ -136,7 +136,7 @@ class FieldSpec:
             value = msg_bytes[start_idx : start_idx + length].decode()
             self.value(value)
         elif self._field_type == FieldType.Value:
-            pass
+            raise Exception("Not Implemented")
 
 
 class MessageBase(object):
@@ -172,7 +172,7 @@ class MessageBase(object):
         for idx, field_spec in enumerate(self._field_specs.values()):
             if idx == 0:
                 if field_spec.value() != len(msg_bytes):
-                    raise Exception("Invalid message length")
+                    raise Exception(f"Invalid message length {str(field_spec)}")
             elif idx == 1:
                 if field_spec.value() != self._messageType:
                     raise Exception("Invalid message type")
@@ -238,13 +238,17 @@ class MessageBase(object):
 
     def execution_id(self, execution_id: str = None) -> str:
         if execution_id is not None:
-            self._field_specs[FieldName.ExecutionId].value(
-                int.from_bytes(execution_id.encode(), "little")
-            )
-        execution_id_ba = (
-            self._field_specs[FieldName.ExecutionId].value().to_bytes(8, "little")
-        )
-        return execution_id_ba.decode("utf-8")
+            self._field_specs[FieldName.ExecutionId].value(execution_id)
+        return self._field_specs[FieldName.ExecutionId].value().strip()
+        # TODO: Need clarification and examples of 'base 36 numbers'
+#        if execution_id is not None:
+#            self._field_specs[FieldName.ExecutionId].value(
+#                int.from_bytes(execution_id.encode(), "little")
+#            )
+#        execution_id_ba = (
+#            self._field_specs[FieldName.ExecutionId].value().to_bytes(8, "little")
+#        )
+#        return execution_id_ba.decode("utf-8")
 
     def __str__(self) -> str:
         # time
@@ -290,9 +294,9 @@ class MessageBase(object):
                 or field_spec[0] == FieldName.ModifyFlags
                 or field_spec[0] == FieldName.ParticipantId
             ):
-                pass
+                print(f"HANDLED_key: {field_spec[0]}")
             else:
-                print(f"key: {field_spec[0]}")
+                print(f"OTHER_key: {field_spec[0]}")
         msg_str = msg_str[:-2]
         msg_str += ")"
         return msg_str

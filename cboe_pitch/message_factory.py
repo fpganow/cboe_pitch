@@ -6,6 +6,8 @@ from .delete_order import DeleteOrder
 from .modify import ModifyOrderLong, ModifyOrderShort
 from .order_executed import OrderExecuted, OrderExecutedAtPriceSize
 from .reduce_size import ReduceSizeLong, ReduceSizeShort
+from .modify import ModifyOrderLong, ModifyOrderShort
+from .delete_order import DeleteOrder
 from .trade import TradeLong, TradeShort, TradeExpanded
 
 class MessageFactory:
