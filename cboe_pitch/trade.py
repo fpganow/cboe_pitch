@@ -53,7 +53,7 @@ class TradeBase(MessageBase):
             field_name=FieldName.ExecutionId,
             offset=33,
             length=8,
-            field_type=FieldType.PrintableAscii,
+            field_type=FieldType.Binary,
         )
 
     def set_fields(
@@ -72,7 +72,7 @@ class TradeBase(MessageBase):
         self._field_specs[FieldName.Quantity].value(quantity)
         self._field_specs[FieldName.Symbol].value(symbol)
         self._field_specs[FieldName.Price].value(price)
-        self._field_specs[FieldName.ExecutionId].value(execution_id)
+        self.execution_id(execution_id)
 
 
 class TradeLong(TradeBase):
