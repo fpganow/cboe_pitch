@@ -53,7 +53,7 @@ class TradeBase(MessageBase):
             field_name=FieldName.ExecutionId,
             offset=33,
             length=8,
-            field_type=FieldType.Binary,
+            field_type=FieldType.PrintableAscii,
         )
 
     def set_fields(

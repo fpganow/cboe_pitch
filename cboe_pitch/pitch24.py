@@ -153,12 +153,12 @@ class MessageBase(object):
             sorted(self._field_specs.items(), key=lambda x: x[1].offset())
         )
         for field_name, field_spec in ordered_field_specs.items():
-            logger.debug(f"{field_name}")
+            #logger.debug(f"{field_name}")
 
             if field_spec.value() is not None:
                 tmp_val = field_spec.get_bytes()
                 tmp_val_str = [f'0x{format(x, "02x")}' for x in tmp_val]
-                logger.debug(f"\tAppending: {list(tmp_val_str)}")
+                #logger.debug(f"\tAppending: {list(tmp_val_str)}")
 
                 final_msg.extend(tmp_val)
         return final_msg
