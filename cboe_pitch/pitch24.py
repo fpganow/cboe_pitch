@@ -138,6 +138,17 @@ class FieldSpec:
         elif self._field_type == FieldType.Value:
             raise Exception("Not Implemented")
 
+class FieldConverter:
+    @staticmethod
+    def orderid_to_u64(order_id: str) -> int:
+        return int.from_bytes(order_id.encode(), 'little')
+
+
+    @staticmethod
+    def symbol_to_u64(symbol: str) -> int:
+        # NOTE: AddOrderShort expects symbol to be of length 6
+        pad_symbol = symbol + ((8 - len(symbol)) * ' ')
+        return int.from_bytes(pad_symbol.encode(), 'big')
 
 class MessageBase(object):
     _messageType = None
@@ -196,7 +207,8 @@ class MessageBase(object):
     def order_id(self, order_id: str = None) -> str:
         if order_id is not None:
             self._field_specs[FieldName.OrderId].value(
-                int.from_bytes(order_id.encode(), "little")
+                # 'ORID0001' => 0x313030304449524f
+                FieldConverter.orderid_to_u64(order_id)
             )
         order_id_ba = self._field_specs[FieldName.OrderId].value().to_bytes(8, "little")
         return order_id_ba.decode("utf-8")
