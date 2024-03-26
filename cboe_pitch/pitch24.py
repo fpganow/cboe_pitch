@@ -143,12 +143,19 @@ class FieldConverter:
     def orderid_to_u64(order_id: str) -> int:
         return int.from_bytes(order_id.encode(), 'little')
 
+    @staticmethod
+    def u64_to_orderid(orderid_u64: int) -> str:
+        return orderid_u64.to_bytes(8, "little").decode("utf-8").strip()
 
     @staticmethod
     def symbol_to_u64(symbol: str) -> int:
         # NOTE: AddOrderShort expects symbol to be of length 6
         pad_symbol = symbol + ((8 - len(symbol)) * ' ')
         return int.from_bytes(pad_symbol.encode(), 'big')
+
+    @staticmethod
+    def u64_to_symbol(symbol_u64: int) -> str:
+        return symbol_u64.to_bytes(8, "big").decode("utf-8").strip()
 
 class MessageBase(object):
     _messageType = None
