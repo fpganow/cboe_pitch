@@ -5,10 +5,13 @@
 
 import argparse
 import logging
+import socket
 import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+from prettytable import PrettyTable
 
 from .generator import Generator, WatchListItem
 from .seq_unit_header import SequencedUnitHeader
@@ -129,12 +132,12 @@ def main():
         seed=1_000,
     )
 
-    logger.info("")
-    logger.info(get_line("=", "="))
-    logger.info("Initial Order Book")
-    logger.info(get_line("=", "="))
-    logger.info("")
-    logger.info(generator._orderbook.get_order_book(ticker))
+#    logger.info("")
+#    logger.info(get_line("=", "="))
+#    logger.info("Initial Order Book")
+#    logger.info(get_line("=", "="))
+#    logger.info("")
+#    logger.info(generator._orderbook.get_order_book(ticker))
 
     # Generate Messages
     msg_count = 0
@@ -158,6 +161,28 @@ def main():
     if seq_unit_hdr.hdr_count() > 0:
         seq_unit_array.append(seq_unit_hdr)
 
+    # Display generated messages one Sequenced Unit Header
+    # at a time
+
+    logger.info('Sending messages over UDP to:')
+    logger.info(f'  - {config.publish_host()}:{config.publish_port()}')
+
+    # Start socket
+    (addr, port) = (config.publish_host(), config.publish_port())
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.connect((addr, port))
+
+    for seq_unit_hdr_ in seq_unit_array:
+        logger.info(f'{seq_unit_hdr_}, get_bytes length: {len(seq_unit_hdr_.get_bytes())}')
+        for idx, msg in enumerate(seq_unit_hdr_.getMessages()):
+            logger.info(f'  - [{idx}] {msg} ')
+            logger.info(f'    {msg.get_bytes()} ')
+        sock.send(seq_unit_hdr_.get_bytes())
+    sock.close()
+
+
+
+    sys.exit(0)
     # Write Generated Messages
     # TODO: Write out messages in binary format
     #       and echo to screen
