@@ -313,7 +313,7 @@ class MessageBase(object):
                 or field_spec[0] == FieldName.ModifyFlags
                 or field_spec[0] == FieldName.ParticipantId
             ):
-                print(f"HANDLED_key: {field_spec[0]}")
+                logger.debug(f"HANDLED_key: {field_spec[0]}")
             else:
                 print(f"OTHER_key: {field_spec[0]}")
         msg_str = msg_str[:-2]

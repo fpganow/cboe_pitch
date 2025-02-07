@@ -22,13 +22,15 @@ class Config:
         yaml = ruamel.yaml.YAML()
         yaml_obj = yaml.load(raw_text)
         self._watchList = yaml_obj["watchlist"]
-        # self._seq_unit_hdr_len = yaml_obj["seq_unit_hdr_len"]
+        self._seq_unit_hdr_len = yaml_obj["seq_unit_hdr_len"]
         self._num_of_msgs = int(yaml_obj["num_of_msgs"])
         self._msg_rate_p_sec = int(yaml_obj["msg_rate_p_sec"])
         self._verbose = bool(yaml_obj["verbose"])
         self._output_file = str(yaml_obj["output_file"])
         self._audit_log_file = str(yaml_obj["audit_log_file"])
         self._trace_log_file = str(yaml_obj["trace_log_file"])
+        self._publish_host = str(yaml_obj["publish"]["host"])
+        self._publish_port = int(yaml_obj["publish"]["port"])
 
     def seq_unit_hdr_len(self) -> int:
         return self._seq_unit_hdr_len
@@ -53,3 +55,9 @@ class Config:
 
     def watch_list(self):
         return self._watchList
+
+    def publish_host(self) -> str:
+        return self._publish_host
+
+    def publish_port(self) -> int:
+        return self._publish_port

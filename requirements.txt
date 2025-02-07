@@ -2,4 +2,5 @@ black
 mypy
 numpy
 pyyaml>=6.0
+prettytable
 ruamel.yaml
