@@ -2,6 +2,9 @@
 # TODO:
 #  - Find bug when trying to encode 'Side'
 #     pitch24.py line 87
+# TODO: Write to pcap file
+# TODO: How to add arp entry
+#
 
 import argparse
 import logging
@@ -129,7 +132,7 @@ def main():
         watch_list=watch_list,
         msg_rate_p_sec=config.msg_rate_p_sec(),
         start_time=start_time,
-        seed=1_000,
+        seed=1_004,
     )
 
 #    logger.info("")
