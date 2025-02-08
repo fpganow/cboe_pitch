@@ -1,5 +1,6 @@
 import argparse
 import logging
+import sys
 from typing import Any
 
 from .file_parser import FileParser
@@ -22,11 +23,27 @@ def parse_args() -> Any:
     )
     parser.add_argument(
         "-b",
-        "--binary_file",
+        "--binary-file",
         required=True,
         action="store",
         type=str,
         help="Config File",
+    )
+    parser.add_argument(
+        "-i",
+        "--ip",
+        action="store",
+        type=str,
+        default="10.0.1.14",
+        help="Destination IP",
+    )
+    parser.add_argument(
+        "-p",
+        "--dest-port",
+        action="store",
+        type=int,
+        default=8000,
+        help="Destination Port",
     )
     return parser.parse_args()
 
@@ -51,6 +68,8 @@ def set_up_logging(verbose: bool, debug: bool) -> None:
 
 def main():
     args = parse_args()
+    dst_ip = args.ip
+    dst_port = args.dest_port
 
     set_up_logging(verbose=args.verbose, debug=args.debug)
 
@@ -59,9 +78,17 @@ def main():
     logger.warn(get_line("-", "+"))
     logger.warn(get_form(f"Parsing: {args.binary_file}"))
     logger.warn(get_line("-", "+"))
+    logger.warn(get_form(f"IP Address: {dst_ip}"))
+    logger.warn(get_form(f"Port: {dst_port}"))
     logger.warn(get_line(" ", "|"))
+    logger.warn(get_line("-", "+"))
 
-    seq_array = FileParser.parse_file(file_path=args.binary_file)
+    seq_array = FileParser.parse_pcap(file_path=args.binary_file,
+                                      dst_ip=dst_ip,
+                                      dport=dst_port)
+
+    logger.warn(get_line("-", "+"))
+    logger.warn(get_form("Parsed BATS messages:"))
     for seq_idx, seq in enumerate(seq_array):
         logger.warn(get_line("-", "+"))
         logger.warn(get_form(f"[{seq_idx}] SeqUnitHdr: {seq}"))
