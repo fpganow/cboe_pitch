@@ -12,6 +12,7 @@ import socket
 import sys
 from datetime import datetime
 from pathlib import Path
+from scapy.all import Ether, IP, UDP, Raw, wrpcap 
 from typing import Any
 
 from prettytable import PrettyTable
@@ -83,6 +84,7 @@ def set_up_logging(audit_log: str, trace_log: str, verbose: bool, debug: bool) -
 
 def main():
     args = parse_args()
+    d_mac = "00:0A:35:18:3C:1F"
 
     if Path(args.config).exists() is False:
         print(f"config: {args.config} does not exist", file=sys.stderr)
@@ -164,70 +166,106 @@ def main():
     if seq_unit_hdr.hdr_count() > 0:
         seq_unit_array.append(seq_unit_hdr)
 
-    # Display generated messages one Sequenced Unit Header
-    # at a time
+    logger.warn(get_form('Will send messages over UDP to:'))
+    logger.warn(get_form(f'  - {config.publish_host()}:{config.publish_port()}'))
+    logger.warn(get_line("-", "+"))
 
-    logger.info('Sending messages over UDP to:')
-    logger.info(f'  - {config.publish_host()}:{config.publish_port()}')
+    d_now = datetime.now()
+    file_base = f"generated_{d_now.year}_{d_now.month:02}_{d_now.day:02}"
+    pcap_file = file_base + ".pcap"
+    audit_file = file_base + ".txt"
+
+    logger.warn(get_form('Writing pcap file to:'))
+    logger.warn(get_form(f'  - {pcap_file}'))
+    logger.warn(get_line("-", "+"))
+
+    logger.warn(get_form('Writing audit log to:'))
+    logger.warn(get_line("-", "+"))
+    logger.warn(get_form(f'  - {audit_file}'))
 
     # Start socket
     (addr, port) = (config.publish_host(), config.publish_port())
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.connect((addr, port))
 
+    # Write Audit log
+    audit_log_str = ""
+
+    logger.warn(get_line("-", "+"))
+    logger.warn(get_form('Sending messages over UDP to:'))
+    logger.warn(get_line("-", "+"))
     for seq_unit_hdr_ in seq_unit_array:
-        logger.info(f'{seq_unit_hdr_}, get_bytes length: {len(seq_unit_hdr_.get_bytes())}')
+        logger.warn(get_form(f'{seq_unit_hdr_}, get_all_bytes length: {len(seq_unit_hdr_.get_all_bytes())}'))
+        audit_log_str += f'{seq_unit_hdr_}, get_all_bytes length: {len(seq_unit_hdr_.get_all_bytes())}\n'
+
+        raw_bytes = seq_unit_hdr.get_bytes()
+
+        row_str_msb = ' '.join([f'{x:02x}' for x in raw_bytes[0:4]])
+        row_str_lsb = ' '.join([f'{x:02x}' for x in raw_bytes[4:8]])
+        row_str = f'        {row_str_msb}    {row_str_lsb}'
+        audit_log_str += f'{row_str}\n'
+        logger.warn(get_form(f'{row_str}'))
+
         for idx, msg in enumerate(seq_unit_hdr_.getMessages()):
-            logger.info(f'  - [{idx}] {msg} ')
-            logger.info(f'    {msg.get_bytes()} ')
+            logger.warn(get_form(f'  - [{idx}] {msg}, length={len(msg.get_bytes())}'))
+            audit_log_str += f'  - [{idx}] {msg}, length={len(msg.get_bytes())}\n'
+            raw_bytes = msg.get_bytes()
+
+            row_len = 8
+            num_rows = len(raw_bytes) // row_len
+            num_extra = len(raw_bytes) % row_len
+            for i in range(num_rows):
+                start_idx = i * row_len
+                row = raw_bytes[start_idx : start_idx + row_len]
+
+                row_str_msb = ' '.join([f'{x:02x}' for x in row[0:4]])
+                row_str_lsb = ' '.join([f'{x:02x}' for x in row[4:8]])
+                row_str = f'         {row_str_msb}    {row_str_lsb}'
+                audit_log_str += f'{row_str}\n'
+                logger.warn(get_form(f'{row_str}'))
+            if num_extra > 0:
+                row_str = '         ' + ' '.join([f'{x:02x}' for x in raw_bytes[-num_extra:]])
+                audit_log_str += f'{row_str}\n'
+                logger.warn(get_form(f'{row_str}'))
+
         sock.send(seq_unit_hdr_.get_bytes())
     sock.close()
+    logger.warn(get_line("-", "+"))
 
+    Path(audit_file).write_text(f'{audit_log_str}')
 
+    # Generate Pcap file and audit log
+    logger.warn(get_form('Writing to pcap file:'))
+    packets = []
+    for seq_unit_hdr_ in seq_unit_array:
+        ip_layer = IP(dst=addr)
+        udp_layer = UDP(dport=port)
+        payload_data = seq_unit_hdr.get_all_bytes()
+        payload_layer = Raw(load=payload_data)
+        ether_layer = Ether(dst=d_mac)
+        packet = ether_layer / ip_layer / udp_layer / payload_layer
+
+        row_len = 8
+        num_rows = len(payload_data) // row_len
+        num_extra = len(payload_data) % row_len
+        for i in range(num_rows):
+            start_idx = i * row_len
+            row = payload_data[start_idx : start_idx + row_len]
+
+            row_str_msb = ' '.join([f'{x:02x}' for x in row[0:4]])
+            row_str_lsb = ' '.join([f'{x:02x}' for x in row[4:8]])
+
+            logger.warn(get_form(f'  {row_str_msb}    {row_str_lsb}'))
+        if num_extra > 0:
+            row_str = ' '.join([f'{x:02x}' for x in payload_data[-num_extra:]])
+            logger.warn(get_form(f'  {row_str}'))
+        # Print seq unit hdr raw bytes
+        # print packet raw bytes
+        packets.append(packet)
+
+    wrpcap(pcap_file, packets)
 
     sys.exit(0)
-    # Write Generated Messages
-    # TODO: Write out messages in binary format
-    #       and echo to screen
-    #       and for trace show orderbook
-    f_bin = open(config.output_file(), "wb")
-
-    for seq_unit_hdr in seq_unit_array:
-        logger.info(get_line(" ", " "))
-        logger.info(get_line(" ", " "))
-
-        # Print Sequenced Unit Header info
-        file_offset = f_bin.tell()
-        print(f"Offset={str(hex(file_offset))}: {seq_unit_hdr}")
-
-        # Write Sequenced Unit Header to file
-        new_msg_bytes = seq_unit_hdr.get_bytes()
-        new_msg_bytes_str = ", ".join([str(hex(x)) for x in new_msg_bytes])
-        print(f"DEBUG: bytes: {new_msg_bytes_str}")
-        f_bin.write(new_msg_bytes)
-
-        for message in seq_unit_hdr.getMessages():
-            # Print one-liner for each message in Sequenced Unit Header, including file offset
-            file_offset = f_bin.tell()
-            logger.warn(f"\t - Offset={str(hex(file_offset))}: {message}")
-            # Print each message to file
-            f_bin.write(message.get_bytes())
-
-    f_bin.close()
-
-
-#    for i in range(num_of_msgs):
-#        logger.info(get_line(" ", " "))
-#        logger.info(get_line(" ", " "))
-#        new_msg = generator.getNextMsg()
-#
-#        logger.info(get_line("=", "=", sep_len))
-#        logger.warn(get_line("=", "=", sep_len))
-#        logger.warn(f"Message #{i+1}:    {new_msg}")
-#        new_msg_bytes = new_msg.get_bytes()
-#        new_msg_bytes_str = ", ".join(["0x" + str(x) for x in new_msg_bytes])
-#        logger.info(f"bytes:\n\t{new_msg_bytes_str}")
-#
 #        logger.info(f"{str(new_msg)}\n")
 #        f_bin.write(new_msg.get_bytes())
 #

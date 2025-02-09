@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import List
 
-from scapy.all import rdpcap, IP, UDP
+from scapy.all import raw, rdpcap, IP, UDP
 from .seq_unit_header import SequencedUnitHeader
 from .util import get_line, get_form
 
@@ -27,7 +27,9 @@ class FileParser:
         for packet in packets:
             if IP in packet and packet[IP].dst == dst_ip and packet[UDP].dport == dport:
                 logger.warn(get_form(packet.summary()))
-                rem_bytes = packet[UDP].payload.load
+
+                #rem_bytes = packet[UDP].payload.load
+                rem_bytes = raw(packet[IP][UDP].payload)
 
                 more_seq = True
                 while more_seq:

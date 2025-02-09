@@ -91,6 +91,7 @@ class SequencedUnitHeader(MessageBase):
     @staticmethod
     def from_bytestream(msg_bytes: ByteString) -> "SequencedUnitHeader":
         # Read in Sequenced Unit Header
+
         seq_unit_hdr_bytes = msg_bytes[:8]
 
         seq_unit_hdr = SequencedUnitHeader()
@@ -152,6 +153,9 @@ class SequencedUnitHeader(MessageBase):
         return total_length
 
     def get_bytes(self) -> ByteString:
+        return super().get_bytes()
+
+    def get_all_bytes(self) -> ByteString:
         tot_len = self.getLength()
         self.hdr_length(tot_len)
         hdr_bytes = super().get_bytes()
