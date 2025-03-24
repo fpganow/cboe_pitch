@@ -83,3 +83,23 @@ class TestTime(TestCase):
         assert_that(message.messageType(), equal_to(0x20))
         assert_that(message.time(), equal_to(297_458_942))
         assert_that(message.time(), equal_to(0x11_BA_DC_FE))
+
+    def test_timestamp_to_string(self):
+        # GIVEN
+        message = Time.from_parms(time=200)
+
+        # WHEN
+        message_str = str(message)
+
+        # THEN
+        assert_that(message_str, equal_to("(Time, 200)"))
+
+    def test_timestamp_larger_to_string(self):
+        # GIVEN
+        message = Time.from_parms(time=44_500)
+
+        # WHEN
+        message_str = str(message)
+
+        # THEN
+        assert_that(message_str, equal_to("(Time, 44,5000)"))
