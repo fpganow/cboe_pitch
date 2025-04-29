@@ -4,6 +4,15 @@ Python Parser and Creator of CBOE PITCH Messages
 ## Based on
 https://cdn.cboe.com/resources/membership/US_EQUITIES_OPTIONS_MULTICAST_PITCH_SPECIFICATION.pdf
 
+## VENV - Windows
+```
+powershell.exe
+. .\venv.win\Scripts\activate
+python3.11 -m pip install -e .
+...
+player
+```
+
 ## Create CBOE Pitch Messages
 
 Good for generating test messages for your CBOE Pitch Parser
@@ -73,3 +82,14 @@ Heartbeat
 
 ### Options
 - not implemented -
+
+## Generator
+
+## Parser
+
+## Player
+
+## Receiver
+
+receiver_main.py
+
