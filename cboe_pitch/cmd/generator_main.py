@@ -27,10 +27,10 @@ from typing import Any
 
 from prettytable import PrettyTable
 
-from .generator import Generator, WatchListItem
-from .seq_unit_header import SequencedUnitHeader
-from .config import Config
-from .util import get_line, get_form
+from ..generator import Generator, WatchListItem
+from ..seq_unit_header import SequencedUnitHeader
+from ..config import Config
+from ..util import get_line, get_form
 
 sep_len = 89
 
@@ -226,7 +226,8 @@ def main():
     args = parse_args()
 
     if args.config_or_pcap.endswith('.pcap'):
-        pass
+        pcap_file = args.config_or_pcap
+        print(f'Analysing {pcap_file}')
 #    logger.info("")
 #    logger.info(get_line("=", "="))
 #    logger.info("Initial Order Book")
