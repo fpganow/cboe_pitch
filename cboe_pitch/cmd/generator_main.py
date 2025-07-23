@@ -222,6 +222,10 @@ def set_up_logging(audit_log: str, trace_log: str, verbose: bool, debug: bool) -
 
 def main():
     """
+    Generates a pcap file with BATS messages for testing and benchmarking
+    a BATS parser.
+
+
     """
     args = parse_args()
 

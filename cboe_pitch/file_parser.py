@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 class FileParser:
     @staticmethod
     def parse_pcap(file_path: str,
+                   dst_mac: str,
                    dst_ip: str,
                    dport: int) -> List[SequencedUnitHeader]:
 
@@ -20,13 +21,13 @@ class FileParser:
             raise Exception(f"File {file_path} does not exist")
 
         # Use scapy to parse pcap file
-        logger.warn(get_form("Parsed packets:"))
-        logger.warn(get_line("-", "+"))
+        logger.debug(get_form("Parsed packets:"))
+        logger.debug(get_line("-", "+"))
         out_arr = []
         packets = rdpcap(file_path)
         for packet in packets:
             if IP in packet and packet[IP].dst == dst_ip and packet[UDP].dport == dport:
-                logger.warn(get_form(packet.summary()))
+                logger.debug(get_form(packet.summary()))
 
                 #rem_bytes = packet[UDP].payload.load
                 rem_bytes = raw(packet[IP][UDP].payload)
