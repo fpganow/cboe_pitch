@@ -109,21 +109,26 @@ def main():
                                           dst_ip=ip,
                                           dport=port)
 
-        #logger.warn(get_line("-", "+"))
         logger.warn(get_form("Parsed BATS messages:"))
         for seq_idx, seq in enumerate(seq_array):
             logger.warn(get_line("-", "+"))
             logger.warn(get_form(f'[{seq_idx}] {seq}, get_all_bytes length: {len(seq.get_all_bytes())}'))
-            raw_bytes = seq.get_bytes()
-            row_str_msb = ' '.join([f'{x:02x}' for x in raw_bytes[0:4]])
-            row_str_lsb = ' '.join([f'{x:02x}' for x in raw_bytes[4:8]])
-            row_str = f'        {row_str_msb}    {row_str_lsb}'
-            logger.warn(get_form(f'{row_str}'))
+            seq_no = seq.hdr_sequence()
+
+            if args.detailed is True:
+                raw_bytes = seq.get_bytes()
+                row_str_msb = ' '.join([f'{x:02x}' for x in raw_bytes[0:4]])
+                row_str_lsb = ' '.join([f'{x:02x}' for x in raw_bytes[4:8]])
+                row_str = f'        {row_str_msb}    {row_str_lsb}'
+                logger.warn(get_form(f'{row_str}'))
 
             for msg_idx, msg in enumerate(seq.getMessages()):
-                logger.warn(get_form(f'  - [{msg_idx}] {msg}, length={len(msg.get_bytes())}'))
+                logger.warn(get_form(f'  - [msg_idx={msg_idx}][seq_no={seq_no}] {msg}, length={len(msg.get_bytes())}'))
+                seq_no += 1
                 raw_bytes = msg.get_bytes()
 
+                if args.short is True and args.detailed is False:
+                    continue
                 row_len = 8
                 num_rows = len(raw_bytes) // row_len
                 num_extra = len(raw_bytes) % row_len

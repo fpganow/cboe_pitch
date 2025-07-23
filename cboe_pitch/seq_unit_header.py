@@ -174,6 +174,7 @@ class SequencedUnitHeader(MessageBase):
         pretty_msg_type = str(type(self)).split(".")[-1][:-2]
         msg_str = f"({pretty_msg_type}, "
         msg_str += f"HdrLength={self.hdr_length()}, "
-        msg_str += f"HdrCount={self.hdr_count()}"
+        msg_str += f"HdrCount={self.hdr_count()}, "
+        msg_str += f"HdrSequence={self.hdr_sequence()}"
         msg_str += ")"
         return msg_str

@@ -1,8 +1,22 @@
-DEFAULT_LINE_LENGTH = 100
+"""
+Generic utilities, includes:
 
+- Send over UDP
+- Execute Shell Command
+- Format text for pretty printing (like tabulate)
+
+"""
 
 import logging
 import socket
+import subprocess
+
+
+logger = logging.getLogger()
+
+
+DEFAULT_LINE_LENGTH = 110
+
 
 def get_line_ln(line_char: str, edge_char: str, line_len: int = DEFAULT_LINE_LENGTH):
     return get_line(line_char, edge_char, line_len) + "\n"
@@ -49,11 +63,35 @@ def set_up_logging(verbose: bool, debug: bool) -> None:
 
     logger.setLevel(logging.DEBUG)
 
-def send_over_udp(seq, mac, ip, port):
+
+def execute_shell(command: str) -> str:
     """
     """
-    #(d_mac, addr, port) = (addr_port_tup[0], addr_port_tup[1], addr_port_tup[2])
-    #addr_port_tup = (d_mac, config.publish_host(), config.publish_port())
+    # Execute a simple shell command
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    res = result.stdout
+    return res
+
+
+def send_over_udp(seq_unit_hdr, mac, ip, port):
+    """
+    Get raw bytes from seq_unit_hdr and sends it over UDP
+    to IP address ip, and UDP port port.
+
+    Checks if the MAC address matches the ARP table.
+    """
+    res = execute_shell(f"powershell.exe arp -a {ip}")
+    if 'No ARP Entries Found.' in res:
+        logger.error(get_line("-", "+"))
+        logger.error(get_form(f'No ARP Entries found for {ip}, transmission will probably fail.'))
+        # Insert ARP entry?
+        insert_cmd = f"powershell.exe arp -s {ip} {mac.upper()}"
+        logger.error(get_form(f"Fix by running the following from an elevated Command Prompt:"))
+        logger.error(get_line(" ", "|"))
+        logger.error(get_form(f"  '{insert_cmd}'"))
+        logger.error(get_line(" ", "|"))
+        logger.error(get_line("-", "+"))
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.connect((ip, port))
 
