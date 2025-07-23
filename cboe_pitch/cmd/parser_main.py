@@ -3,8 +3,8 @@ import logging
 import sys
 from typing import Any
 
-from .file_parser import FileParser
-from .util import get_line, get_form
+from ..file_parser import FileParser
+from ..util import get_line, get_form
 
 sep_len = 89
 
