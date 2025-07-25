@@ -95,5 +95,7 @@ def send_over_udp(seq_unit_hdr, mac, ip, port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.connect((ip, port))
 
-    sock.send(seq_unit_hdr.get_bytes())
+    logger.warn(f'Sending: {ip}:{port}')
+    logger.warn(f' len: {len(seq_unit_hdr.get_all_bytes())}')
+    sock.send(seq_unit_hdr.get_all_bytes())
     sock.close()

@@ -54,7 +54,7 @@ Example usage:
         "-d", "--detailed", default=False, action="store_true", help="Print detailed version of BATS Messages to console"
     )
     parser.add_argument(
-        "--mac", default="00-0A-35-18-3C-1F", action="store",
+        "--mac", default="00-0A-35-18-3C-0F", action="store",
         help="MAC Address"
     )
     parser.add_argument(
@@ -146,6 +146,7 @@ def main():
 
             # TODO: Insert time delay here
             # Send over UDP
+            logger.warn('UDP')
             send_over_udp(seq, mac, ip, port)
 
         logger.warn(get_line("-", "+"))
