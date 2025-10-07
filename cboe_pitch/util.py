@@ -73,7 +73,7 @@ def execute_shell(command: str) -> str:
     return res
 
 
-def send_over_udp(seq_unit_hdr, mac, ip, port):
+def send_over_udp(seq_unit_hdr, mac, ip: int, port: int):
     """
     Get raw bytes from seq_unit_hdr and sends it over UDP
     to IP address ip, and UDP port port.

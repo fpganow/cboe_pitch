@@ -26,7 +26,7 @@ class FileParser:
         out_arr = []
         packets = rdpcap(file_path)
         for packet in packets:
-            if IP in packet and packet[IP].dst == dst_ip and packet[UDP].dport == dport:
+            if IP in packet: # and packet[IP].dst == dst_ip and packet[UDP].dport == dport:
                 logger.debug(get_form(packet.summary()))
 
                 #rem_bytes = packet[UDP].payload.load

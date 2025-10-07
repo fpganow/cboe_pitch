@@ -87,7 +87,11 @@ Heartbeat
 
 ## Parser
 
+Dump the contents of a pcap file
+
 ## Player
+
+Send the contents of a pcap file
 
 ## Receiver
 

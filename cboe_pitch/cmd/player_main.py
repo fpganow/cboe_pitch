@@ -63,6 +63,7 @@ Example usage:
     )
     parser.add_argument(
         "--port", default=8000, action="store",
+        type=int,
         help="Port"
     )
     parser.add_argument(
