@@ -17,7 +17,6 @@ player
 
 Good for generating test messages for your CBOE Pitch Parser
 
-## Parse CBOE Pitch Messages
 
 Good for testing your feed parser
 
@@ -33,6 +32,8 @@ message = AddOrderLong.from_parms(time_offset=447_000,
 
 print(f'{message.get_bytes()}')
 ```
+
+## Parse CBOE Pitch Messages
 
 ## See Also
 
